@@ -9,21 +9,31 @@ from .identity import selection
 class Management:
     def __init__(self, ctx):
         self.ctx = ctx
-        saved = ctx.get_config("mode", "off")
+        self.read_failed = False
+        saved = self.read("mode", "off")
         self.mode = saved if saved in ("off", "observe") else "unavailable"
         self.closed = False
-        self.deployment, self.identity_evidence = selection(ctx.get_config("deployment"))
+        self.deployment, self.identity_evidence = selection(self.read("deployment"))
+
+    def read(self, key, default=None):
+        try:
+            return self.ctx.get_config(key, default)
+        except Exception:
+            self.read_failed = True
+            return "unavailable"
 
     def close(self):
         self.closed = True
         self.mode = "off"
 
     def status(self):
-        saved = self.ctx.get_config("mode", "off")
-        deployment_saved, saved_evidence = selection(self.ctx.get_config("deployment"))
+        saved = self.read("mode", "off")
+        deployment_saved, saved_evidence = selection(self.read("deployment"))
         identity_changed = (deployment_saved, saved_evidence) != (self.deployment, self.identity_evidence)
+        healthy = not self.read_failed and saved in ("off", "observe") and self.mode != "unavailable"
         return {
-            "ok": True,
+            "ok": healthy,
+            "integrity": "management_only_no_host_enforcement" if healthy else "settings_or_mode_unavailable",
             "version": VERSION,
             "deployment": self.deployment,
             "deployment_saved": deployment_saved,
