@@ -1,6 +1,7 @@
 """Management only; no quota source, routing or inference is connected in S1."""
 import json
 import platform
+from threading import RLock
 
 from . import VERSION
 from .identity import selection
@@ -9,6 +10,7 @@ from .identity import selection
 class Management:
     def __init__(self, ctx):
         self.ctx = ctx
+        self.lock = RLock()
         self.read_failed = False
         saved = self.read("mode", "off")
         self.mode = saved if saved in ("off", "observe") else "unavailable"
@@ -23,8 +25,9 @@ class Management:
             return "unavailable"
 
     def close(self):
-        self.closed = True
-        self.mode = "off"
+        with self.lock:
+            self.closed = True
+            self.mode = "off"
 
     def status(self):
         saved = self.read("mode", "off")
@@ -60,6 +63,10 @@ class Management:
         }
 
     def command(self, raw_args):
+        with self.lock:
+            return self._command(raw_args)
+
+    def _command(self, raw_args):
         parts = raw_args.split() if isinstance(raw_args, str) else []
         error = None
         if parts in (["status"], ["explain"], []):
