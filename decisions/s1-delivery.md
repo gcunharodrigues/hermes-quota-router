@@ -2,7 +2,7 @@
 type: Delivery Record
 title: S1 — gestão local e gate do destino instalado
 description: Implementação parcial verificável de OFF/Observe, identidade declarada e validação de payload, com instalação real ainda não admitida.
-status: in-progress
+status: draft
 ---
 
 # S1 — execução parcial
