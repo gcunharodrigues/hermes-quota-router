@@ -1,7 +1,9 @@
 """Management only; no quota source, routing or inference is connected in S1."""
 import json
+import platform
 
 from . import VERSION
+from .identity import selection
 
 
 class Management:
@@ -10,6 +12,7 @@ class Management:
         saved = ctx.get_config("mode", "off")
         self.mode = saved if saved in ("off", "observe") else "unavailable"
         self.closed = False
+        self.deployment, self.identity_evidence = selection(ctx.get_config("deployment"))
 
     def close(self):
         self.closed = True
@@ -17,13 +20,27 @@ class Management:
 
     def status(self):
         saved = self.ctx.get_config("mode", "off")
+        deployment_saved, saved_evidence = selection(self.ctx.get_config("deployment"))
+        identity_changed = (deployment_saved, saved_evidence) != (self.deployment, self.identity_evidence)
         return {
             "ok": True,
             "version": VERSION,
+            "deployment": self.deployment,
+            "deployment_saved": deployment_saved,
+            "identity_evidence": self.identity_evidence,
+            "identity_saved_evidence": saved_evidence,
+            "installed_verified": False,
+            "compatibility": {
+                "python": platform.python_version(),
+                "host": "not_verified_in_this_runtime",
+                "lifecycle": "requires_installed_smoke",
+                "auto": "unavailable",
+                "surfaces": "not_managed_in_S1",
+            },
             "mode_saved": saved if saved in ("off", "observe", "auto") else "invalid",
             "mode_effective": "unloaded" if self.closed else self.mode,
             "effective_scope": "this_plugin_instance_only",
-            "restart_required": not self.closed and saved != self.mode,
+            "restart_required": not self.closed and (saved != self.mode or identity_changed),
             "draining": "not_applicable_no_admission_in_S1",
             "auto_available": False,
             "auto_reason": "S1 has no qualified per-attempt admission or billing contract",
