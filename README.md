@@ -2,12 +2,16 @@
 
 Optional subscription-quota governance for Hermes Agent.
 
-**Status: documentation/bootstrap only.**
-There is no installable plugin or qualified AUTO routing yet.
+**Status: S1 implemented locally in part; installed qualification blocked.**
+OFF/Observe management and synthetic verification exist on the S1 task branch.
+No isolated Hermes test target has been admitted, and AUTO remains unavailable.
 A public repository is not evidence of working installation, billing eligibility or complete request coverage.
 
 - [Knowledge and decisions](decisions/index.md)
-- [Tarefa atual: bootstrap e confirmação da revisão](decisions/bootstrap.md)
+- [Tarefa atual: S1 e prova instalada pendente](decisions/s1-delivery.md)
+- [Operação S1](docs/s1-operations.md)
+- [Testes sintéticos](docs/testing.md)
+- [Compatibilidade observada](docs/compatibility.md)
 - [Product specification](decisions/product-spec.md)
 - [Delivery plan](decisions/product-plan.md)
 
@@ -57,4 +61,7 @@ Close entries with a date and evidence; do not delete them or infer execution au
 | HQR-05 | Isolation | Provision and verify full-host isolation for dev/test/prod. | Negative controls cover filesystem, credentials, dependencies, sockets and inherited environment. |
 | HQR-06 | Distribution | Publish the exact admitted revision, preserve provenance and exercise promotion/rollback. | Explicit push/release/install permission and readback; commit alone is not deployment. |
 | HQR-07 | Policy | Calibrate thresholds/freshness/hysteresis and approve per-role candidates. | Boundary tests plus separately authorized representative real evidence; no invented gains. |
-| HQR-08 | S1 tooling | Implement the authored-line gate and discover non-empty test/build commands. | New tests/gate enforce the 2000-character rule with path-specific exemptions and real RED/GREEN. |
+| HQR-08 | S1 tooling | Implement the authored-line gate and discover non-empty test/build commands. | Closed locally 2026-11-12: `line_gate.py`, 2000/2001/missing-file controls and non-empty unit/integration suites; installed proof is not included. |
+| HQR-09 | S1 installed gate | Admit a concrete whole-Hermes test target, provisioning, transport/install/restart scope and negative isolation controls; then exercise AC-01/10/12 against installed bytes. | Coordinator records explicit operational permission and installed lifecycle/isolation receipts for the reviewed SHA; no real inference by default. |
+| HQR-10 | S1 review and readiness | Reconcile critical independent review and remaining applicable acceptance criteria before GO. | Three route-review perspectives reconciled, workspace guard stable and all required observations complete; local source/synthetic tests alone do not close S1. |
+| HQR-11 | S1 test static diagnostics | Optional editor diagnostics flag nullable ModuleSpec in protected synthetic loaders; preserve tests unless a specific change is approved. | Native execution evidence remains green, or an authorized exact protected-test adjustment resolves static typing without weakening behavior. |
