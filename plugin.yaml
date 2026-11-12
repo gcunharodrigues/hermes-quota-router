@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "hermes-quota-router",
+  "version": "0.1.0rc1",
+  "description": "Optional OFF/Observe management; AUTO unavailable and installation qualification required",
+  "kind": "standalone",
+  "license": "MIT",
+  "python_dependencies": [],
+  "provides_hooks": [],
+  "provides_tools": [],
+  "config_schema": {
+    "mode": {
+      "type": "str",
+      "default": "off",
+      "description": "off or observe; auto is unavailable in S1"
+    },
+    "deployment": {
+      "type": "dict",
+      "description": "Explicit schema/environment/channel/revision/origin declaration; not proof of installation"
+    }
+  }
+}
