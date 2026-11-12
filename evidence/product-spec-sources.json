@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": 12,
+      "url": "https://hermes-agent.nousresearch.com/docs/integrations/providers",
+      "title": "Hermes — provedores, OAuth e extra usage",
+      "accessed": "2026-11-12"
+    },
+    {
+      "id": 15,
+      "url": "https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan",
+      "title": "Anthropic — CLI/Agent SDK usam limites da assinatura",
+      "accessed": "2026-11-12"
+    },
+    {
+      "id": 18,
+      "url": "/evidence/plugin-native-research.txt",
+      "title": "Pesquisa pública: viabilidade e limites do plugin",
+      "accessed": "2026-11-12"
+    },
+    {
+      "id": 19,
+      "url": "/evidence/plugin-existing-research.txt",
+      "title": "Pesquisa pública: cinco soluções parciais",
+      "accessed": "2026-11-12"
+    },
+    {
+      "id": 5,
+      "url": "https://hermes-agent.nousresearch.com/docs/user-guide/features/plugins",
+      "title": "",
+      "accessed": "2026-11-12"
+    },
+    {
+      "id": 6,
+      "url": "https://hermes-agent.nousresearch.com/docs/developer-guide/middleware",
+      "title": "",
+      "accessed": "2026-11-12"
+    },
+    {
+      "id": 7,
+      "url": "/evidence/product-delivery-research.txt",
+      "title": "Pesquisa pública de distribuição e isolamento",
+      "accessed": "2026-11-12"
+    }
+  ]
+}

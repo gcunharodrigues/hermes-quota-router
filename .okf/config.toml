@@ -1,0 +1,11 @@
+config_version = 2
+profile = "per-repo"
+bundle = "decisions"
+scope = "."
+
+[managed]
+exclude = []
+
+[ingestion]
+staging = "raw"
+archive = "source-archive"

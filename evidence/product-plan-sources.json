@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": 18,
+      "url": "/evidence/plugin-native-research.txt",
+      "title": "Pesquisa pública: viabilidade e limites do plugin",
+      "accessed": "2026-11-12"
+    },
+    {
+      "id": 7,
+      "url": "/evidence/product-delivery-research.txt",
+      "title": "Pesquisa pública de distribuição e isolamento",
+      "accessed": "2026-11-12"
+    }
+  ]
+}

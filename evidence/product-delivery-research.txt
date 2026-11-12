@@ -1,0 +1,61 @@
+# Distribuição GitHub e isolamento de plugin Hermes
+
+**Corte:** 12/11/2026. **Natureza:** pesquisa documental, não instalação testada.
+
+**Resposta:** a menor abordagem compatível é um repositório de plugin Python nativo (`plugin.yaml` + `__init__.py/register(ctx)`), instalado por **SHA completo**; “teste/produção” deve ser uma escolha explícita de revisão e ambiente, não uma promessa de isolamento por profile.[1][4]
+
+## Matriz de contrato
+
+| Estado | Contrato verificável / limite |
+|---|---|
+| **Suportado** | Git: `hermes plugins install DONO/REPO --ref SHA40 --no-enable`. `--ref` aceita 40 hexadecimais, não nomes de tags, branches ou SHA curto; checkout detached e verificação do commit. HTTPS/SSH também são fontes aceitas.[17][21] |
+| **Suportado, condicionado** | Instalação nova pode usar também `--no-deps`: baixa desabilitado, sem consentir dependências. **Não substitui plugin ativo**. `--no-enable` numa reinstalação **não desativa** seleção já existente; instalador ainda pode solicitar variáveis do manifesto.[16] |
+| **Suportado** | Pin bloqueia `plugins update`; trocar/retroceder revisão exige `hermes plugins install DONO/REPO --force --ref SHA40`. Reinstalar a mesma origem preserva não rastreados/ignorados e salva alterações rastreadas em `plugins-backup`; não é instalação limpa. `--force` também aceita cautela do scanner, não perigo.[1][16][21] |
+| **Suportado** | Proveniência em `$HERMES_HOME/plugins/.install-metadata.json`: origem canônica, revisão, pin; sem segredos. Update Git não pinado usa pull/reclone e remove bytecode antigo. Processos mantêm imports até reiniciar; cache não comprova revisão carregada.[17][18][4] |
+| **Suportado** | PM admite dependências Python declaradas em `pyproject.toml`/manifesto numa geração compartilhada pela instalação. `build-system` é reconhecido; resolução/build podem falhar sem publicar a seleção candidata.[4][20] |
+| **Suportado / fronteiras não verificadas** | `plugins.isolation: host` executa handlers no processo host de plugins. Esses trechos não demonstram separação de filesystem, credenciais ou dependências; não tratar processo separado como sandbox.[2] |
+| **Proposto** | Canal teste aponta SHA candidato; produção aponta o **mesmo SHA aprovado**. Registro de promoção e rollback pertence ao processo do produto, não ao instalador Hermes. |
+| **Não verificado** | Download automático de GitHub Release assets/wheels, seleção de ABI/plataforma, instalação de Rust/Cargo ou build Rust garantido pelo instalador. Não prometer esses contratos. |
+
+## Canais não são ambientes
+
+**Branch** é uma referência de desenvolvimento; **tag** identifica ponto do histórico; **release** acrescenta publicação/notas/assets à tag; **prerelease** é uma classificação da release.[8][14]
+Não há seletor nativo `teste/prod` no parser consultado; instalar tag exige antes resolver seu commit e passar o SHA.[21][17]
+
+**GitHub Environments** condicionam jobs de Actions que referenciam o ambiente; não isolam o Hermes instalado no computador.[9]
+Reviewers obrigatórios e wait timers, nos planos Free/Pro/Team, só estão disponíveis para repositórios públicos nessa documentação; não presumir proteções equivalentes em privado nem aprovação automática por existir um environment.[9]
+
+**Proposta:** prerelease para candidato, release estável após aprovação, preservando commit e hashes dos artefatos; evitar rebuild na promoção. Mesmo SHA **não congela** dependências resolvidas, runtime ou dados.[4]
+
+## Autenticação
+
+Público tenta acesso anônimo primeiro. Em privado HTTPS, após recusa de autenticação, o código resolve credencial já disponível: `GITHUB_TOKEN`/`GH_TOKEN`, login do `gh`, helper Git; credencial rejeitada pode ceder à seguinte. Header é transitório, não URL persistida. SSH usa ssh-agent.[1][19]
+**Proposta:** reutilizar login nativo autorizado no ambiente correspondente, nunca copiar/exibir tokens entre profiles ou gravá-los no repo. `gh auth login` prefere armazenamento do sistema, mas pode cair em arquivo texto: não garantir keyring universal.[10]
+
+## Checklist proposto de distribuição e isolamento
+
+- [ ] Publicar instruções separadas para teste/produção com SHA40 literal, compatibilidade Hermes/Python, dependências e hashes; manter revisão anterior acessível.
+- [ ] Usar **instalações/checkouts distintos**, ambientes Python distintos e executar o **Hermes inteiro** em usuários/containers/VMs separados, sem mounts, sockets, agentes SSH ou variáveis de produção. Só mudar `terminal.cwd` ou sandboxar o terminal não separa código Python do plugin.
+- [ ] Não clonar profile de produção: criação comum compartilha/copía credenciais; `--no-credentials` evita a cópia inicial, mas profile não é sandbox. `HOME`/credenciais de CLIs também são compartilhados por padrão no host. Profiles da mesma instalação podem contribuir dependências ao mesmo ambiente.[3][4]
+- [ ] Em teste, baixar novo plugin com `--no-enable --no-deps`; não usar `validate --install-deps` no runtime produtivo. Doctor importa código com permissões do usuário: seu home temporário não é sandbox.[2][21]
+- [ ] Preferir Python sem dependências adicionais inicialmente. Se Rust for necessário, propor sidecar separado e shim mínimo; `python_runtime: external` deixa esse runtime sob responsabilidade externa. Extensão compilada requer validação específica de build/wheels/ABI.[2][20]
+- [ ] Antes de promover/reverter, conferir proveniência, arquivos locais, dependências e compatibilidade dos dados; reiniciar e validar. Rollback de SHA não restaura automaticamente config, credenciais ou banco do plugin.[1][2][4]
+
+**Limites/parada:** prioridades documentadas; sem instalação, inferência ou testes. Três páginas adicionais GitHub sofreram rate limit e um caminho de código retornou 404; não repetidos. Documentação web é mutável; código consultado fixado em `2bfa6b07a14a9675cc6bc85e6bf254c23072fb5f` (localizadores: fonte 16, `_install_plugin_core/cmd_install`; 17, `_normalize_exact_revision/_checkout_exact_revision`; 18, `_pull_plugin_update/_post_pull_housekeeping`; 19, `run_git_with_credential_fallback`; 20, `read_python_declaration`; 21, `build_plugins_parser`). Execução/isolamento e empacotamento nativo permanecem validações futuras, não fatos demonstrados.
+
+## Sources
+
+[1] https://hermes-agent.nousresearch.com/docs/user-guide/features/plugins — Plugins | Hermes Agent
+[2] https://hermes-agent.nousresearch.com/docs/developer-guide/plugins — Build a Hermes Plugin | Hermes Agent
+[3] https://hermes-agent.nousresearch.com/docs/user-guide/profiles — Profiles: Running Multiple Agents | Hermes Agent
+[4] https://hermes-agent.nousresearch.com/docs/reference/package-management — Package Management | Hermes Agent
+[8] https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases
+[9] https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments
+[10] https://cli.github.com/manual/gh_auth_login
+[14] https://docs.github.com/en/rest/releases/releases
+[16] https://raw.githubusercontent.com/NousResearch/hermes-agent/2bfa6b07a14a9675cc6bc85e6bf254c23072fb5f/hermes_cli/plugins_cmd_install.py
+[17] https://raw.githubusercontent.com/NousResearch/hermes-agent/2bfa6b07a14a9675cc6bc85e6bf254c23072fb5f/hermes_cli/plugins_cmd_git.py
+[18] https://raw.githubusercontent.com/NousResearch/hermes-agent/2bfa6b07a14a9675cc6bc85e6bf254c23072fb5f/hermes_cli/plugins_cmd_update.py
+[19] https://raw.githubusercontent.com/NousResearch/hermes-agent/2bfa6b07a14a9675cc6bc85e6bf254c23072fb5f/hermes_cli/git_credentials.py
+[20] https://raw.githubusercontent.com/NousResearch/hermes-agent/2bfa6b07a14a9675cc6bc85e6bf254c23072fb5f/pm/plugin_declarations.py
+[21] https://raw.githubusercontent.com/NousResearch/hermes-agent/2bfa6b07a14a9675cc6bc85e6bf254c23072fb5f/hermes_cli/subcommands/plugins.py

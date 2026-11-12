@@ -1,0 +1,55 @@
+# Roteamento de franquias no Hermes — 12/11/2026
+
+**Resposta:** não identifiquei correspondência integral no recorte pesquisado. Existem precedentes públicos fortes para **adaptar**, especialmente ds-router e Vibe Relay, mas nenhum candidato comprova conjuntamente Codex↔Claude por cadência de cotas, Fable, estado interprofiles e cobertura conversa/cron/auxiliares/subagentes.[23][16][24]
+
+**Método:** catálogo oficial primeiro (JSON gerado em 12/11/2026, 14:46 UTC), documentação e repositórios Official/Labs; depois buscas públicas, originais, issues e PRs. A matriz seleciona cinco soluções; versões são observações documentais, não certificação operacional.[14][30][31]
+
+## Matriz de candidatos
+
+| Solução / fonte primária e localizador | Versão, licença e manutenção observáveis | Reutilização e lacunas; core |
+|---|---|---|
+| **ds-router**, README §§What it is, Limits.[23] | v0.1.0; MIT; HEAD `f052dc3`, 06/10/2026.[19] | Mais próximo da **cadência**: burn rate versus reset, seleção proativa e distribuição de sessões. Porém entrega quatro outros provedores, não Codex/Claude; timer externo de 15 minutos reescreve configuração. Não é plugin nem atua por requisição; estado interprofiles e auxiliares não comprovados. Funcionalidade publicada sem patch no core; faltariam adaptadores e integração. |
+| **Vibe Relay**, README Configuration/Limitations e `quota.py`.[16][24] | Catálogo 0.3.2 @ `aac27ee`, 10/11/2026; licença **TBD**, portanto sem permissão aberta comprovada para copiar código.[14][16] | Plugin quota-aware já existente: limiar escolhe self/executor, park/resume por reset. Não compara cadência dos dois provedores: consulta uma cota; armazenamento por `HERMES_HOME`. `account_windows` descarta janelas marcadas model quando há janelas account: não satisfaz Fable. Foco em delegação de coding, não troca universal do modelo principal/auxiliares. Sem patch declarado para esse recorte. |
+| **OrqueHelx**, README §§Routes, Scope.[5] | Catálogo 0.3.0 @ `964896e`; MIT; maintenance mode explícito.[14][32] | Reutilizáveis rotas Claude/Codex, lifecycle público e diagnóstico de quota. Escolha por chamada pelo modelo; exaustão gera ask/parent_decides/wait. Não é balanceamento automático proativo nem coordenador interprofiles. Sem patch declarado no recorte publicado. |
+| **Hermes Model Router**, README Native delegation routing.[10] | Catálogo 0.8.0 @ `d05c2ba`; MIT; release 28/10; HEAD observado distinto `661daa1`, 04/11.[14][33][10] | Reutilizáveis backends nativos, allowlists e configuração por profile. Heavy/Light por finalidade e escolha de profile, **não por cota/cadência**; não resolve todas as superfícies. Declara dispensar patch no core para sua delegação. |
+| **CLIProxyAPI + conector Hermes/cpa-status + Ebb**, READMEs e Auto-tuned routing weights.[17][18][28] | CPA v8.0.67 (11/11); conector 0.8.1, pin `301dd706`; Ebb 0.1.0, HEAD `669c73f` (29/10). MIT declarado nos três.[14][26][38] | Stack local sem SaaS pago obrigatório: proxy compartilhável e pesos por folga/reset em contas Claude/Codex. **Ebb balanceia contas dentro de cada provedor**, não escolhe Claude↔Codex por tarefa; exige macOS 26. Companion `cpa-status` já implementa parsing Fable/model-scoped; política de cadência que o utilize e cobertura integral não demonstradas.[39] Só cobre chamadas configuradas para o proxy. Integração publicada sem patch Hermes; adiciona serviço externo. |
+
+Plugins catalogados têm instalação/enable/disable/remove nativos; isso não comprova reversão de configurações/estado. ds-router usa instalador/desinstalador próprio; Ebb/CPA são aplicações separadas.[2][23][28]
+
+## Contraevidência e limites
+
+O core já oferece **fallback reativo** e pools de credenciais do mesmo provedor; `least_used` conta requisições, não folga semanal. `provider_routing` otimiza provedores OpenRouter por preço/velocidade, não franquias pessoais.[8][9][15]
+
+A issue #46991 e PR #48018 foram fechadas; esta não foi merged e trata do caminho de erro. Não são implementação disponível. Entretanto, middleware atual admite adaptive routing: a rejeição histórica **não prova impossibilidade atual nem necessidade inevitável de alterar core**.[4][13][27]
+
+A proposta #43, no repositório oficial, permanece aberta e aborda reservas 5h/semana/modelo e coordenação entre processos; comentário menciona Fable, mas isso não comprova implementação ou contrato estável.[20]
+
+**Recomendação analítica:** criar uma camada opcional de política compartilhada, reutilizando telemetria/lifecycle existentes e ideias de cadência do ds-router; não reconstruir autenticação/fallback. Adaptar Vibe Relay exige esclarecer licença. Viabilidade sem mudanças no core permanece condicionada à verificação das interfaces atuais e cobertura real. Nenhum projeto foi instalado/executado; endpoints, concorrência, licença jurídica e termos não foram validados. ZeroAPI retornou 404. Parada: subperguntas sustentadas ou lacunas explícitas; não é alegação de inexistência universal.
+
+## Sources
+
+[2] https://hermes-agent.nousresearch.com/docs/user-guide/features/plugin-catalog
+[4] https://github.com/NousResearch/hermes-agent/issues/46991
+[5] https://github.com/TicoraX/OrqueHelx
+[8] https://hermes-agent.nousresearch.com/docs/user-guide/features/fallback-providers
+[9] https://hermes-agent.nousresearch.com/docs/user-guide/features/credential-pools
+[10] https://github.com/metamindedu/hermes-model-router
+[13] https://github.com/NousResearch/hermes-agent/pull/48018
+[14] https://hermes-agent.nousresearch.com/docs/api/plugin-catalog.json
+[15] https://hermes-agent.nousresearch.com/docs/user-guide/features/provider-routing
+[16] https://github.com/trenthalden/vibe-relay
+[17] https://github.com/router-for-me/CLIProxyAPI
+[18] https://github.com/duu261/hermes-cliproxyapi-provider
+[19] https://github.com/btsouth/ds-router
+[20] https://github.com/NousResearch/hermes-official-plugins/issues/43
+[23] https://raw.githubusercontent.com/btsouth/ds-router/f052dc3fd2db2293bc383e3773f1a00c46452153/README.md
+[24] https://raw.githubusercontent.com/trenthalden/vibe-relay/aac27eea07fea6fe7ffa9767b53be811559ffa04/quota.py
+[26] https://github.com/lucasnsaraujo/ebb
+[27] https://hermes-agent.nousresearch.com/docs/developer-guide/middleware
+[28] https://raw.githubusercontent.com/lucasnsaraujo/ebb/669c73fe79830ce18ec3c1f0811aa50248af4837/README.md
+[30] https://raw.githubusercontent.com/NousResearch/hermes-official-plugins/main/README.md
+[31] https://raw.githubusercontent.com/NousResearch/hermes-labs-plugins/main/README.md
+[32] https://raw.githubusercontent.com/TicoraX/OrqueHelx/964896e44979b29755dd880c5eb2557909e88bf6/LICENSE
+[33] https://raw.githubusercontent.com/metamindedu/hermes-model-router/d05c2ba9c7fbd3ed4ac447d7041fad534e04f0ed/LICENSE
+[38] https://github.com/router-for-me/CLIProxyAPI/releases/tag/v8.0.67
+[39] https://raw.githubusercontent.com/duu261/hermes-cliproxyapi-provider/301dd70683b43e0ba8d3c443c6f062e4c43864d0/cpa-status/quota.py

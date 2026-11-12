@@ -1,0 +1,22 @@
+# Local work and generated indexes
+.worktrees/
+.codegraph/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.cache/
+
+# Secrets and live local state are never product sources
+.env
+.env.*
+auth.json
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+.runtime/
+state/
+logs/
+midia/

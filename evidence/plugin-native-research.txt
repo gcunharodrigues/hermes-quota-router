@@ -1,0 +1,57 @@
+# Roteador opcional de cota no Hermes
+
+**Resposta:** o empacotamento sem fork é viável; **a cobertura universal e o bloqueio confiável antes de qualquer requisição não estão demonstrados pelas extensões atuais**. Um plugin geral pode oferecer política, comandos e configuração, mas não se deve prometer que um hook troca transportes Codex↔Claude ou governa todos os auxiliares.[7][11][13]
+
+**Corte:** 12/11/2026; código Hermes fixado em `34ecc0facbb774a1c6c25a346be549444f7b3368`; advanced-delegation em `8b5b6296bbb900f90e296b4729d2c9a5d1139825`. Pesquisa documental, sem instalar ou executar fontes.
+
+## Matriz de evidência primária
+
+| Questão | Resultado e localizador |
+|---|---|
+| Plugin geral: ciclo | `hermes plugins install owner/repo --no-enable`; `enable`; `disable`; `remove` (`uninstall` é alias). Instalação pode fixar SHA; há distribuição Git, catálogo e entry-points pip. Plugins gerais são opt-in. Docs “Managing plugins” e `plugins_cmd.py:728–798,1151–1153`.[7][14] |
+| Profile/global | Arquivos/seleção seguem o home do profile; não são uma ativação universal. PM pode resolver dependências na união de profiles: compartilhar ambiente Python não equivale a compartilhar habilitação. Docs “Dependency preparation”; providers têm loader próprio por home.[7][3] |
+| Registros | `register_command`, `register_cli_command`, `register_middleware`; settings via `config_schema` e `ctx.get_config/set_config` em `plugins.entries.<id>.settings`; backend de delegação via `register_delegation_provider`. Provider LLM usa separadamente `register_provider(ProviderProfile)`.[15][10][3] |
+| Plugin geral: reload | `activate_plugin_now` tenta recarregar gateway/backend; comandos/hooks podem ficar ativos imediatamente, ferramentas Python/prompt esperam nova sessão; dependências recém-instaladas podem exigir restart. `disable` solicita unload; callbacks já ligados a plataformas podem sobreviver até restart. `remove` apaga árvore/config, mas seu caminho CLI não chama o reload de `disable`. Não implica cancelamento de requisição em voo.[8][14][18] |
+| Conversas/cron/filhos | `turn_api_request.build_request_payload:110–174` aplica middleware **depois** de construir kwargs do provider; `perform_api_call:93–145` continua usando transporte/client do agente. Cron constrói `AIAgent` (`scheduler:2474–2510`); delegação escolhe a rota do filho. Isso não transforma kwargs em um resolvedor universal de provider/auth.[11][12][19] |
+| Auxiliares | `auxiliary_client:2656–2753` passa pelo caminho Relay e pelos eventos auxiliares, não pelo middleware LLM geral nesse funil. `auxiliary_hooks:119–141,197–266`: retornos ignorados e erros fail-open. Não há veto/reescolha universal demonstrado aí.[13][9] |
+
+## Distinções decisivas
+
+**Hooks:** `pre_api_request` é observação, não roteamento.[4]
+A exceção `pre_llm_call` pode bloquear o turno, suprimindo também compactação inicial, prefetch e titulação; não reavalia cada tentativa/auxiliar após admitir o turno, e erro/timeout do callback não bloqueia.[4][21]
+
+**Middleware:** `llm_request` pode mudar modelo/esforço nos kwargs compatíveis; `llm_execution` pode substituir execução, mas precisa devolver a resposta esperada. Falhas antes de `next_call` continuam pela cadeia/base: lançar exceção não é um veto confiável. Alterar `model` não reconstrói client, autenticação, API mode ou histórico para outro provider.[2][11][12]
+
+**Provider plugin:** declara backend, credenciais, capacidades, kwargs e eventualmente `create_client`.[3]
+Um client roteador próprio exigiria adaptação e seleção explícita, sem cobertura gratuita das rotas existentes. Seu loader é distinto: colocação/kind pode importar sem allow-list geral; disable/remove não demonstram revogação imediata de registros/clientes já carregados.[20]
+
+**`model_map`:** escolhe opções configuradas por subagente; não mede cota nem roteia o principal/auxiliares.[16]
+O contrato de delegação admite `provider/model/reasoning_effort` e recusa antes de criar o filho; backend/schema ficam presos à sessão, salvo aplicação explícita `--now` ou reconstrução por compressão. Desabilitar o plugin deixando seu backend selecionado falha fechado, não restaura o nativo automaticamente.[10]
+
+## Conclusão delimitada e proposta
+
+Para o requisito completo, proponho uma extensão nativa pequena **em contrato, não necessariamente em diff**: política opcional pré-resolução/pré-envio com resultado tipado `allow / route / deny`, aplicada a principal, cron, filhos e auxiliares sync/async, inclusive retries/fallbacks; reconstrução nativa de client/transporte e esforço; negativa não convertida em fallback silencioso. Plugin ausente/desligado deve retornar ao caminho nativo, sem sondagens de cota. Isso é proposta, não API existente.
+
+Lacunas: sem smoke de reload, cancelamento em voo ou cobertura exaustiva; revisão independente sem bloqueantes, com duas precisões incorporadas. Dados persistentes do plugin podem sobreviver à remoção.[15]
+Cota e transporte Claude são problemas separados: o helper público de requisição autenticada lista somente `openai-codex`, não prova acesso Claude nem franquia de assinatura.[17]
+
+## Sources
+
+[2] https://hermes-agent.nousresearch.com/docs/developer-guide/middleware
+[3] https://hermes-agent.nousresearch.com/docs/developer-guide/model-provider-plugin
+[4] https://hermes-agent.nousresearch.com/docs/developer-guide/observer-hooks
+[7] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/website/docs/user-guide/features/plugins.md
+[8] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/hermes_cli/plugins_activation.py
+[9] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/agent/auxiliary_hooks.py
+[10] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/website/docs/developer-guide/delegation-provider-plugin.md
+[11] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/agent/turn_api_request.py
+[12] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/agent/turn_api_call.py
+[13] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/agent/auxiliary_client.py
+[14] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/hermes_cli/plugins_cmd.py
+[15] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/website/docs/developer-guide/plugins/index.md
+[16] https://raw.githubusercontent.com/NousResearch/hermes-official-plugins/8b5b6296bbb900f90e296b4729d2c9a5d1139825/advanced-delegation/model_map.py
+[17] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/hermes_cli/plugin_provider_requests.py
+[18] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/hermes_cli/plugins_cmd_remove.py
+[19] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/cron/scheduler.py
+[20] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/providers/__init__.py
+[21] https://raw.githubusercontent.com/NousResearch/hermes-agent/34ecc0facbb774a1c6c25a346be549444f7b3368/agent/turn_context.py
