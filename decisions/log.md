@@ -2,6 +2,7 @@
 
 ## 2026-11-12
 
+- [S1 corrente](s1-delivery.md) registra três pareceres independentes críticos bloqueados por provas operacionais ausentes, guarda estável e quatro recomendações opcionais no backlog, sem mudança posterior de código/testes.
 - [S1 corrente](s1-delivery.md) implementa gestão OFF/Observe, identidade declarada, comparação de payload e gate de linhas com RED/GREEN sintéticos; instalação e isolamento do destino continuam pendentes.
 - [Operação](../docs/s1-operations.md), [testes](../docs/testing.md) e [compatibilidade](../docs/compatibility.md) separam prova local de host real; AUTO, inferência, publicação e produção não foram ativados.
 
