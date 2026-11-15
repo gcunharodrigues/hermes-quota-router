@@ -27,6 +27,14 @@ from lifecycle import (  # noqa: E402
     CONFIG, GITHUB, ISOLATION, ORIGIN, PLUGIN, PY, SCAN, TARGET, Failure, Run, check, deployment, host_state,
     installed_modules, listener_admission, require_safe_scan, single,
 )
+from s2_probe import PROBE  # noqa: E402
+
+
+class S2Run(Run):
+    """S1 `Run` with the probe that also reads revisions whose default answer is text."""
+
+    def probe(self, *calls):
+        return self.json(PROBE, json.dumps(list(calls)))
 
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 NEW_PROFILE = "hqr-unenrolled"
@@ -111,8 +119,20 @@ def require_off(status, fresh):
     check(fresh["mode_effective"] == "off" and fresh["mode_saved"] == "off" and not fresh["restart_required"], "fresh consumer not OFF", fresh)
 
 
+def flatten(settings, prefix=""):
+    """Dotted keys of the native settings tree: `ctx.set_config("a.b", v)` stores `{"a": {"b": v}}`."""
+    flat = {}
+    for key, value in (settings or {}).items():
+        name = prefix + str(key)
+        if isinstance(value, dict) and value:
+            flat.update(flatten(value, name + "."))
+        else:
+            flat[name] = value
+    return flat
+
+
 def settings_changed(before, after):
-    old, new = (before["entry"] or {}).get("settings") or {}, (after["entry"] or {}).get("settings") or {}
+    old, new = flatten((before["entry"] or {}).get("settings")), flatten((after["entry"] or {}).get("settings"))
     return sorted(k for k in set(old) | set(new) if old.get(k) != new.get(k))
 
 
@@ -202,7 +222,7 @@ def main(argv):
         raise SystemExit("HQR_PRODUCTION_HERMES_HOME is required")
     production = Path(production)
     candidate, rollback = args.candidate, args.rollback
-    run = Run(args.receipts)
+    run = S2Run(args.receipts)
     files = lambda: run.json(FILES)  # noqa: E731
     host_before = run.step("host-production-before", lambda: host_state(production))
 
@@ -345,10 +365,11 @@ def main(argv):
     run.step("external-invalid-value-reported-and-reset", invalid_external_value)
 
     def unenrolled_profile():
+        home = f"{STATE}/profiles/{NEW_PROFILE}"
+        check(run.exec("test", "!", "-e", home, check=False).returncode == 0, "a previous run left the test profile", home)
         before, files_before = run.config(), files()
         created = run.hermes("profile", "create", NEW_PROFILE, check=False)
         listed = run.hermes("-p", NEW_PROFILE, "plugins", "list", "--plain", "--no-bundled", check=False)
-        home = f"{STATE}/profiles/{NEW_PROFILE}"
         other = json.loads(run.docker("exec", "-i", "-e", f"HERMES_HOME={home}", TARGET, PY, "-I", "-B", "-c", CONFIG).stdout.strip().splitlines()[-1])
         plugin_tree = run.exec("test", "-e", f"{home}/plugins/{PLUGIN}", check=False).returncode == 0
         after, files_after = run.config(), files()
@@ -357,8 +378,13 @@ def main(argv):
         check(after == before, "creating a profile changed the enrolled profile's configuration", {"before": before, "after": after})
         status = single(run.probe("status"))
         check(status["mode_effective"] == "observe", "enrolled profile lost Observe", status)
+        # The native profile template includes a comment-only .env; remove the test profile so later controls stay strict.
+        assignments = run.exec("sh", "-c", f"grep -v '^[[:space:]]*#' {home}/.env | grep -c '=' || true").stdout.strip()
+        run.hermes("profile", "delete", "-y", NEW_PROFILE)
+        check(run.exec("test", "!", "-e", home, check=False).returncode == 0, "test profile not deleted", home)
+        check(run.config() == after, "deleting the test profile changed the enrolled profile's configuration")
         return {"list": listed.stdout[-1500:], "new_profile_config": other, "plugin_tree": plugin_tree,
-                "file_changes": file_changes(files_before, files_after)}
+                "template_env_assignments": assignments, "file_changes": file_changes(files_before, files_after)}
     run.step("new-profile-not-enrolled", unenrolled_profile)
 
     def rollback_revision():

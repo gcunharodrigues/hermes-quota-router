@@ -6,6 +6,9 @@ O contrato está na [emenda HQR-20](../decisions/hqr-20-amendment.md) e no [plan
 
 ## Comandos
 
+As respostas vêm em texto para leitura: conclusão primeiro, depois as cotas, o que mudaria, o que pede atenção e os próximos passos.
+Acrescentar `--json` a qualquer comando devolve o mesmo resultado como JSON estrito, para scripts e testes.
+
 - `/quota-router mode observe` liga o Observe; `/quota-router mode off` desliga e zera o contador de leituras do período.
 - `/quota-router status` mostra modo, profile, inscrição, configurações efetivas e inválidas e, em Observe, as leituras de cada provedor (janela, uso, reset, idade e fonte), o resumo da decisão por papel com motivo, resets, mudança proposta ou aprovada e jobs de cron com pin parcial, as notas do mapa (por exemplo, a queda do Astra para a base), o instante da decisão e o que fica fora da cobertura.
 - Um profile sem o plugin habilitado não está inscrito: nada nele muda e o comando não existe ali; `hermes -p <profile> plugins list` mostra o estado.

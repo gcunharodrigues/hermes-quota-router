@@ -48,7 +48,7 @@ class ConcurrentTests(unittest.TestCase):
         self.assertFalse(first.is_alive())
         self.assertFalse(second.is_alive())
         self.assertEqual(errors, [])
-        status = json.loads(command("status"))
+        status = json.loads(command("status --json"))
         self.assertEqual(status["mode_saved"], "off")
         self.assertEqual(status["mode_effective"], "off")
         self.assertFalse(status["restart_required"])

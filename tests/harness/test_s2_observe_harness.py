@@ -91,6 +91,10 @@ class RunnerHelperTests(unittest.TestCase):
         after = {"entry": {"settings": {"mode": "observe", "roles": {}, "credits.anthropic": False}}}
         self.assertEqual(s2_observe.settings_changed(before, after), ["credits.anthropic", "mode"])
         self.assertEqual(s2_observe.settings_changed({"entry": None}, {"entry": None}), [])
+        nested_before = {"entry": {"settings": {"mode": "off", "credits": {"openai-codex": True}}}}
+        nested_after = {"entry": {"settings": {"mode": "observe", "credits": {"openai-codex": True, "anthropic": False},
+                                               "limits": {"hysteresis_pct": 10}}}}
+        self.assertEqual(s2_observe.settings_changed(nested_before, nested_after), ["credits.anthropic", "limits.hysteresis_pct", "mode"])
 
     def test_observe_contract_rejects_known_readings_and_counters(self):
         self.assertEqual(s2_observe.observe_contract(status(), 2), {"openai-codex": "no_snapshot", "anthropic": "no_snapshot"})

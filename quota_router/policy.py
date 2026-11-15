@@ -43,7 +43,9 @@ def eligibility(reading, settings, now, model=None, blocked=None):
         used = _fraction(window["used_pct"]) / 100
         if used >= (session_block if window["kind"] == "session" else week_block):
             exhausted = True
-            result["blocked_by"] = result["blocked_by"] or ("session" if window["kind"] == "session" else "week")
+            if not result["blocked_by"]:
+                result["blocked_by"] = "session" if window["kind"] == "session" else "week"
+                result["blocked_window"] = {"kind": window["kind"], "family": window.get("family")}
             continue
         if window["kind"] != "session":
             scores.append((1 - used) / remaining)

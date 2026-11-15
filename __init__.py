@@ -8,5 +8,5 @@ def register(ctx):
     ctx.register_command(
         "quota-router", manager.command,
         description="Quota Router: OFF/Observe with native quota readings; AUTO unavailable until S3",
-        args_hint="status | explain | mode off|observe|auto | config [show|set <key> <value>|reset <key>]",
+        args_hint="status | explain | mode off|observe|auto | config [show|set <key> <value>|reset <key>|approve-map <variant>] [--json]",
     )

@@ -12,7 +12,7 @@ class FailureTests(unittest.TestCase):
 
         ctx = Unreadable()
         load_entry().register(ctx)
-        result = json.loads(ctx.commands["quota-router"]("status"))
+        result = json.loads(ctx.commands["quota-router"]("status --json"))
         self.assertFalse(result["ok"])
         self.assertEqual(result["mode_effective"], "unavailable")
         self.assertNotIn("sensitive", json.dumps(result))
@@ -25,7 +25,7 @@ class FailureTests(unittest.TestCase):
 
         ctx = Unwritable()
         load_entry().register(ctx)
-        result = json.loads(ctx.commands["quota-router"]("mode observe"))
+        result = json.loads(ctx.commands["quota-router"]("mode observe --json"))
         self.assertFalse(result["ok"])
         self.assertEqual(result["mode_effective"], "off")
         self.assertEqual(ctx.settings, {})
@@ -35,12 +35,12 @@ class FailureTests(unittest.TestCase):
         ctx = Context()
         ctx.settings["mode"] = "auto"
         load_entry().register(ctx)
-        result = json.loads(ctx.commands["quota-router"]("status"))
+        result = json.loads(ctx.commands["quota-router"]("status --json"))
         self.assertFalse(result["ok"])
         self.assertEqual(result["mode_effective"], "unavailable")
         self.assertFalse(result["auto_available"])
         self.assertEqual(ctx.settings, {"mode": "auto"})
-        recovery = json.loads(ctx.commands["quota-router"]("mode off"))
+        recovery = json.loads(ctx.commands["quota-router"]("mode off --json"))
         self.assertTrue(recovery["ok"])
         self.assertEqual(recovery["mode_effective"], "off")
 

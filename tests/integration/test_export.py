@@ -68,7 +68,7 @@ class ExportTests(unittest.TestCase):
                     spec.loader.exec_module(module)
                     ctx = Context()
                     module.register(ctx)
-                    result = json.loads(ctx.command(requested))
+                    result = json.loads(ctx.command(requested + " --json"))
                     self.assertEqual(result["version"], manifest["version"])
                     self.assertEqual(result["mode_effective"], "off" if index == 2 else "observe")
                     self.assertEqual(result["quota_queries"], 0)

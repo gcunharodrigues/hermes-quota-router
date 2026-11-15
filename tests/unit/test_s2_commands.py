@@ -46,7 +46,7 @@ class CommandTests(unittest.TestCase):
         reader = reader_for(openai_codex=codex(10), anthropic=claude(10))
         m, _, _ = manager(Context(), reader)
         for command in ("status", "explain"):
-            result = json.loads(m.command(command))
+            result = json.loads(m.command(command + " --json"))
             self.assertEqual(result["quota"], {"state": "unknown", "source": None})
             self.assertEqual(result["quota_queries"], 0)
         self.assertEqual(reader.calls, [])
@@ -55,12 +55,12 @@ class CommandTests(unittest.TestCase):
         reader = reader_for(openai_codex=codex(100), anthropic=claude(21))
         ctx = Context()
         m, clock, config = manager(ctx, reader)
-        self.assertTrue(json.loads(m.command("mode observe"))["ok"])
-        status = json.loads(m.command("status"))
+        self.assertTrue(json.loads(m.command("mode observe --json"))["ok"])
+        status = json.loads(m.command("status --json"))
         self.assertEqual(status["quota"]["state"], "observed")
         self.assertEqual(status["quota"]["providers"]["openai-codex"]["windows"][0]["used"], 1.0)
         self.assertEqual(status["quota_queries"], 2)
-        explain = json.loads(m.command("explain"))
+        explain = json.loads(m.command("explain --json"))
         self.assertEqual(explain["quota_queries"], 2)
         decisions = explain["decisions"]
         self.assertEqual(decisions["conversation"]["choice"], "anthropic")
@@ -85,27 +85,27 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(ctx.writes, [("mode", "observe")])
         self.assertEqual(config, CONFIG)
         clock.now = NOW + timedelta(seconds=61)
-        self.assertEqual(json.loads(m.command("status"))["quota_queries"], 4)
-        off = json.loads(m.command("mode off"))
+        self.assertEqual(json.loads(m.command("status --json"))["quota_queries"], 4)
+        off = json.loads(m.command("mode off --json"))
         self.assertEqual((off["quota_queries"], off["quota_queries_total"]), (0, 4))
-        self.assertEqual(json.loads(m.command("explain"))["quota_queries"], 0)
+        self.assertEqual(json.loads(m.command("explain --json"))["quota_queries"], 0)
         self.assertEqual(len(reader.calls), 4)
 
     def test_config_show_set_reset_and_reject(self):
         ctx = Context()
         m, _, _ = manager(ctx)
-        shown = json.loads(m.command("config"))
+        shown = json.loads(m.command("config --json"))
         self.assertFalse(shown["settings"]["credits.anthropic"])
-        changed = json.loads(m.command("config set credits.anthropic on"))
+        changed = json.loads(m.command("config set credits.anthropic on --json"))
         self.assertTrue(changed["ok"])
         self.assertTrue(ctx.settings["credits.anthropic"])
         for bad in ("config set limits.week_block_pct 500", "config set nope 1", "config set credits.anthropic",
                     "config set mode auto", "config reset nope"):
             before = list(ctx.writes)
-            result = json.loads(m.command(bad))
+            result = json.loads(m.command(bad + " --json"))
             self.assertFalse(result["ok"], bad)
             self.assertEqual(ctx.writes, before, bad)
-        reset = json.loads(m.command("config reset credits.anthropic"))
+        reset = json.loads(m.command("config reset credits.anthropic --json"))
         self.assertTrue(reset["ok"])
         self.assertFalse(ctx.settings["credits.anthropic"])
 
@@ -113,7 +113,7 @@ class CommandTests(unittest.TestCase):
         reader = reader_for(openai_codex=codex(10), anthropic=claude(10))
         ctx = Context({"mode": "observe", "limits.week_block_pct": 900})
         m, _, _ = manager(ctx, reader)
-        result = json.loads(m.command("explain"))
+        result = json.loads(m.command("explain --json"))
         self.assertIn("limits.week_block_pct", result["settings_invalid"])
         self.assertTrue(result["decision_incomplete"])
         self.assertEqual(ctx.writes, [])
@@ -122,14 +122,14 @@ class CommandTests(unittest.TestCase):
         reader = reader_for(openai_codex=codex(100), anthropic=claude(21))
         ctx = Context({"mode": "observe"})
         m, _, _ = manager(ctx, reader)
-        approved = json.loads(m.command("config approve-map base"))
+        approved = json.loads(m.command("config approve-map base --json"))
         self.assertTrue(approved["ok"])
         roles = ctx.settings["roles"]
         self.assertEqual(roles["conversation"]["openai-codex"], {"model": "gpt-6.1-sol", "effort": "xhigh"})
-        decision = json.loads(m.command("explain"))["decisions"]["conversation"]
+        decision = json.loads(m.command("explain --json"))["decisions"]["conversation"]
         self.assertEqual(decision["state"], "decided")
         self.assertEqual(decision["would_change"]["to"]["provider"], "anthropic")
-        self.assertFalse(json.loads(m.command("config approve-map nope"))["ok"])
+        self.assertFalse(json.loads(m.command("config approve-map nope --json"))["ok"])
 
     def sequence(self, ctx):
         """Manager whose reader serves the current `snaps` builders, fetched at the current clock time."""
@@ -144,7 +144,7 @@ class CommandTests(unittest.TestCase):
         return m, clock, config, snaps
 
     def general(self, m):
-        return json.loads(m.command("explain"))["decisions"]["routes"]["general"]
+        return json.loads(m.command("explain --json"))["decisions"]["routes"]["general"]
 
     def test_changing_readings_hysteresis_and_preference_revisions(self):
         m, clock, config, snaps = self.sequence(Context({"mode": "observe"}))
@@ -160,7 +160,7 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(self.general(m)["choice"], "openai-codex")
         config["delegation"]["backends"]["model_map"]["options"][0]["model"] = "gpt-6.1-terra"
         self.assertEqual(self.general(m)["choice"], "anthropic")
-        m.command("config set limits.reading_max_age_s 61")
+        m.command("config set limits.reading_max_age_s 61 --json")
         self.assertEqual(self.general(m)["choice"], "openai-codex")
         clock.now += timedelta(seconds=120)
         snaps["openai-codex"] = lambda t: codex(100, week_reset_h=84, fetched_at=t)
@@ -170,22 +170,22 @@ class CommandTests(unittest.TestCase):
     def test_idle_status_shows_age_and_refreshes(self):
         m, clock, _, snaps = self.sequence(Context({"mode": "observe"}))
         snaps.update({"openai-codex": lambda t: codex(10, fetched_at=t), "anthropic": lambda t: claude(10, fetched_at=t)})
-        first = json.loads(m.command("status"))
+        first = json.loads(m.command("status --json"))
         self.assertEqual(first["quota"]["providers"]["anthropic"]["age_s"], 0)
         self.assertEqual(first["decided_at"], NOW.isoformat())
         clock.now += timedelta(seconds=30)
-        idle = json.loads(m.command("status"))
+        idle = json.loads(m.command("status --json"))
         self.assertEqual(idle["quota"]["providers"]["anthropic"]["age_s"], 30)
         self.assertEqual(idle["quota_queries"], first["quota_queries"])
         clock.now += timedelta(hours=2)
-        later = json.loads(m.command("status"))
+        later = json.loads(m.command("status --json"))
         self.assertEqual(later["quota"]["providers"]["anthropic"]["age_s"], 0)
         self.assertEqual(later["quota_queries"], first["quota_queries"] + 2)
 
     def test_reading_age_limit_setting(self):
         reader = reader_for(openai_codex=codex(10, fetched_at=NOW - timedelta(seconds=30)), anthropic=claude(10))
         m, _, _ = manager(Context({"mode": "observe", "limits.reading_max_age_s": 10}), reader)
-        status = json.loads(m.command("status"))
+        status = json.loads(m.command("status --json"))
         self.assertEqual(status["quota"]["providers"]["openai-codex"]["reason"], "stale_reading")
         self.assertTrue(status["decision_incomplete"])
 
@@ -193,16 +193,16 @@ class CommandTests(unittest.TestCase):
         reader = reader_for(openai_codex=codex(100), anthropic=claude(21))
         ctx = Context({"mode": "observe"})
         m, _, _ = manager(ctx, reader)
-        self.assertTrue(json.loads(m.command("config approve-map fable"))["ok"])
-        decisions = json.loads(m.command("explain"))["decisions"]
+        self.assertTrue(json.loads(m.command("config approve-map fable --json"))["ok"])
+        decisions = json.loads(m.command("explain --json"))["decisions"]
         self.assertIsNone(decisions["conversation"]["choice"])
         self.assertEqual(decisions["conversation"]["eligibility"]["anthropic"]["blocked_by"], "model_not_eligible:fable")
         self.assertEqual(decisions["routes"]["general"]["choice"], "anthropic")
         reader2 = reader_for(openai_codex=codex(10, astra=True), anthropic=claude(100))
         ctx2 = Context({"mode": "observe", "models.astra": True})
         m2, _, _ = manager(ctx2, reader2)
-        self.assertTrue(json.loads(m2.command("config approve-map astra"))["ok"])
-        deep = json.loads(m2.command("explain"))["decisions"]["routes"]["deep"]
+        self.assertTrue(json.loads(m2.command("config approve-map astra --json"))["ok"])
+        deep = json.loads(m2.command("explain --json"))["decisions"]["routes"]["deep"]
         self.assertIsNone(deep["choice"])
         self.assertEqual(deep["eligibility"]["openai-codex"]["blocked_by"], "model_not_eligible:astra")
         self.assertIsNone(deep["would_change"])
@@ -210,7 +210,7 @@ class CommandTests(unittest.TestCase):
     def test_status_explains_map_fallback_and_changes(self):
         reader = reader_for(openai_codex=codex(100), anthropic=claude(21))
         m, _, _ = manager(Context({"mode": "observe", "models.astra": True}), reader)
-        status = json.loads(m.command("status"))
+        status = json.loads(m.command("status --json"))
         self.assertEqual(status["decisions"]["variant"], "base")
         self.assertIn("astra_catalog_not_verifiable_by_plugin", status["decisions"]["map_notes"])
         self.assertEqual(status["decisions"]["map_status"], "proposal_not_approved")
@@ -222,7 +222,7 @@ class CommandTests(unittest.TestCase):
                                     "anthropic": {"model": "claude-sonnet-5-5", "effort": "xhigh"}}}
         reader = reader_for(openai_codex=codex(10), anthropic=claude(10))
         m, _, _ = manager(Context({"mode": "observe", "roles": swapped}), reader)
-        status = json.loads(m.command("explain"))
+        status = json.loads(m.command("explain --json"))
         self.assertIn("roles", status["settings_invalid"])
         self.assertTrue(status["decision_incomplete"])
         self.assertEqual(status["decisions"]["conversation"]["state"], "proposal_only")
@@ -241,28 +241,28 @@ class CommandTests(unittest.TestCase):
             return copy.deepcopy(CONFIG), copy.deepcopy(JOBS)
 
         m = Management(Context({"mode": "observe"}), importer=lambda: reader, sources=sources, clock=clock)
-        status = json.loads(m.command("status"))
+        status = json.loads(m.command("status --json"))
         self.assertEqual(status["quota"]["providers"]["openai-codex"]["reason"], "stale_reading")
         self.assertEqual(status["decided_at"], (NOW + timedelta(seconds=4)).isoformat())
 
     def test_status_surface_reasons_pins_and_enrollment(self):
         reader = reader_for(openai_codex=codex(100), anthropic=claude(100))
         m, _, _ = manager(Context({"mode": "observe"}), reader)
-        status = json.loads(m.command("status"))
+        status = json.loads(m.command("status --json"))
         conversation = status["decisions"]["conversation"]
         self.assertEqual(conversation["reason"], "no_eligible_candidate")
         self.assertTrue(conversation["resets"])
         self.assertEqual(status["decisions"]["cron"]["partial_pins"],
                          [{"job": "c", "missing": ["provider"]}, {"job": "d1e2", "missing": ["provider", "model"]}])
         self.assertEqual(status["enrollment"]["state"], "enrolled")
-        disabled = json.loads(manager(Context({"mode": "observe", "consumers.cron": False}), reader)[0].command("status"))
+        disabled = json.loads(manager(Context({"mode": "observe", "consumers.cron": False}), reader)[0].command("status --json"))
         self.assertEqual(disabled["decisions"]["cron"]["state"], "disabled_by_setting")
 
     def test_disabled_consumers_and_read_failure(self):
         reader = reader_for(openai_codex=codex(10), anthropic=claude(10))
         ctx = Context({"mode": "observe", "consumers.subagents": False, "consumers.conversation": False})
         m, _, _ = manager(ctx, reader)
-        decisions = json.loads(m.command("explain"))["decisions"]
+        decisions = json.loads(m.command("explain --json"))["decisions"]
         self.assertEqual(decisions["conversation"]["state"], "disabled_by_setting")
         self.assertEqual(decisions["routes"]["deep"]["state"], "disabled_by_setting")
 
@@ -274,7 +274,7 @@ class CommandTests(unittest.TestCase):
 
         failing = Failing({"mode": "observe"})
         fm, _, _ = manager(failing, reader)
-        status = json.loads(fm.command("status"))
+        status = json.loads(fm.command("status --json"))
         self.assertFalse(status["ok"])
         self.assertNotIn("disk", json.dumps(status))
 
@@ -282,12 +282,12 @@ class CommandTests(unittest.TestCase):
         ctx = Context({"limits.hysteresis_pct": float("nan")})
         m, _, _ = manager(ctx)
         for command in ("status", "config", "explain"):
-            json.loads(m.command(command), parse_constant=lambda token: self.fail(f"non-standard JSON {token}"))
+            json.loads(m.command(command + " --json"), parse_constant=lambda token: self.fail(f"non-standard JSON {token}"))
 
     def test_auto_still_refused(self):
         ctx = Context()
         m, _, _ = manager(ctx)
-        result = json.loads(m.command("mode auto"))
+        result = json.loads(m.command("mode auto --json"))
         self.assertFalse(result["ok"])
         self.assertEqual(ctx.writes, [])
 

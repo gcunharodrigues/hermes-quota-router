@@ -11,10 +11,11 @@ from .inventory import native_profile, native_sources, read as read_inventory
 from .mapping import model_gate, propose
 from .policy import decide
 from .readings import collect, native_importer, revalidate
+from .render import render
 from .settings import DEFAULTS, PROVIDERS, load as load_settings, validate
 
 USAGE = ("Usage: /quota-router status | explain | mode off|observe|auto | "
-         "config [show | set <key> <value> | reset <key> | approve-map base|fable|astra|fable+astra]")
+         "config [show | set <key> <value> | reset <key> | approve-map base|fable|astra|fable+astra] [--json]")
 AUTO_REASON = "S2 is Observe only; Auto arrives in S3 after the map approval"
 
 
@@ -150,7 +151,7 @@ class Management:
             keys = ("choice", "tier", "state", "reason", "resets", "partial_pins", "would_change", "proposal_change")
             return {k: decision[k] for k in keys if decision.get(k) is not None}
         if decisions.get("state") == "inventory_unavailable":
-            result["decisions"] = {"state": "inventory_unavailable"}
+            result["decisions"] = {"state": "inventory_unavailable", "provider_level": brief(decisions["provider_level"])}
             return
         result["decisions"] = {"variant": decisions["variant"], "map_status": proposal["status"], "map_notes": proposal["notes"],
                                "conversation": brief(decisions["conversation"]),
@@ -241,8 +242,20 @@ class Management:
         return {"ok": True, "settings": settings, "settings_invalid": invalid, "changed": {key: normalized}}, None
 
     def command(self, raw_args):
+        """Readable chat text by default; the same result as strict JSON when the arguments include `--json`."""
+        parts = raw_args.split() if isinstance(raw_args, str) else []
+        as_json = "--json" in parts
+        remaining = " ".join(p for p in parts if p != "--json")
         with self.lock:
-            return self._command(raw_args)
+            output = self._command(remaining)
+        if as_json:
+            return output
+        payload = json.loads(output)
+        name = parts[0] if parts and parts[0] in ("status", "explain", "config", "mode") else "status"
+        try:
+            return render(name, payload)
+        except Exception:
+            return "Não foi possível montar o texto do resultado. Use `/quota-router status --json` para ver os dados."
 
     def _command(self, raw_args):
         parts = raw_args.split() if isinstance(raw_args, str) else []

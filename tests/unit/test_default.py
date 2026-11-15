@@ -50,7 +50,7 @@ class DefaultTests(unittest.TestCase):
         ctx = Context()
         load_entry().register(ctx)
         self.assertEqual(set(ctx.commands), {"quota-router"})
-        status = json.loads(ctx.commands["quota-router"]("status"))
+        status = json.loads(ctx.commands["quota-router"]("status --json"))
         self.assertEqual(status["mode_saved"], "off")
         self.assertEqual(status["mode_effective"], "off")
         self.assertEqual(status["quota"], {"state": "unknown", "source": None})
