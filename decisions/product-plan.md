@@ -49,6 +49,7 @@ Cada BUILD tem um único escritor dos arquivos compartilhados, paralelismo somen
 O tier não autoriza acesso a credenciais ou alteração de profiles/runtime.
 Cada DEMO nasce bloqueada e só é aceita por o responsável na conversa do default.
 S2 depende do aceite de S1; S3 depende do aceite de S2 e dos gates operacionais específicos.
+S1 foi aceita em 2026-11-15; a [emenda HQR-20](hqr-20-amendment.md) substitui S2 e S3 por Observe com cotas reais, Auto nas próximas tarefas e promoção; Guilherme a aprovou nesse dia.
 
 ## 4. S1 — ciclo de vida e canais no destino real
 

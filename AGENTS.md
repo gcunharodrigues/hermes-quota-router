@@ -19,7 +19,7 @@ Não inferir autorização de push, merge, release, instalação, credenciais, g
 
 - Implementar em branches/worktrees de tarefa; não escrever código de produto na checkout principal.
 - O host permanece dono da autenticação e da adaptação de transporte; o plugin não guarda prompts ou credenciais no estado compartilhado.
-- Não contornar hooks fail-open com monkey-patch; AUTO exige capacidades qualificadas de admissão por tentativa.
+- Não contornar hooks fail-open com monkey-patch; AUTO exige as decisões D2 a D6 e os critérios AC-16 a AC-25 da emenda HQR-20 qualificados.
 - Desconhecido não equivale a quota disponível; inferência aceita não comprova franquia incluída.
 - Desenvolvimento, teste e produção isolam o Hermes inteiro, suas dependências, dados e credenciais; profiles ou worktrees não são sandbox.
 - Estado/configuração/contexto de produção não são fixtures.

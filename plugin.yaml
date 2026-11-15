@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "hermes-quota-router",
-  "version": "0.1.0rc1",
-  "description": "Optional OFF/Observe management; AUTO unavailable and installation qualification required",
+  "version": "0.2.0rc1",
+  "description": "Optional OFF/Observe routing advice from native quota readings; AUTO unavailable until S3",
   "kind": "standalone",
   "license": "MIT",
   "python_dependencies": [],
@@ -12,11 +12,86 @@
     "mode": {
       "type": "str",
       "default": "off",
-      "description": "off or observe; auto is unavailable in S1"
+      "description": "off or observe; auto is unavailable until S3"
     },
     "deployment": {
       "type": "dict",
       "description": "Explicit schema/environment/channel/revision/origin declaration; not proof of installation"
+    },
+    "consumers.subagents": {
+      "type": "bool",
+      "default": true,
+      "description": "Auto writes subagent routes (S3)"
+    },
+    "consumers.cron": {
+      "type": "bool",
+      "default": true,
+      "description": "Auto writes the global cron model (S3)"
+    },
+    "consumers.conversation": {
+      "type": "bool",
+      "default": true,
+      "description": "Auto writes the conversation model read by new sessions (S3)"
+    },
+    "conversation.policy": {
+      "type": "str",
+      "default": "principal_first",
+      "description": "principal_first or pacing"
+    },
+    "principal": {
+      "type": "str",
+      "default": "openai-codex",
+      "description": "Preferred provider: openai-codex or anthropic"
+    },
+    "credits.openai-codex": {
+      "type": "bool",
+      "default": true,
+      "description": "Exhausted Codex may be chosen when its credits are visible and available"
+    },
+    "credits.anthropic": {
+      "type": "bool",
+      "default": false,
+      "description": "Exhausted Claude may be chosen; its credits are not verifiable by the plugin"
+    },
+    "credits.order": {
+      "type": "str",
+      "default": "after_subscriptions",
+      "description": "after_subscriptions: credits only when no subscription is eligible"
+    },
+    "models.fable": {
+      "type": "bool",
+      "default": false,
+      "description": "Include Fable in the map when its own window is visible"
+    },
+    "models.astra": {
+      "type": "bool",
+      "default": false,
+      "description": "Include Astra in the map when the Codex account offers it"
+    },
+    "limits.session_block_pct": {
+      "type": "int",
+      "default": 95,
+      "description": "Session window block threshold, 1-100"
+    },
+    "limits.week_block_pct": {
+      "type": "int",
+      "default": 100,
+      "description": "Weekly window block threshold, 1-100"
+    },
+    "limits.reading_max_age_s": {
+      "type": "int",
+      "default": 60,
+      "description": "Maximum reading age in seconds, 1-3600"
+    },
+    "limits.hysteresis_pct": {
+      "type": "int",
+      "default": 10,
+      "description": "Minimum advantage to switch preference, 0-100"
+    },
+    "roles": {
+      "type": "dict",
+      "default": {},
+      "description": "Approved equivalence map by role; written by /quota-router config approve-map <variant>"
     }
   }
 }

@@ -239,6 +239,7 @@ Essa exigência pode depender da extensão nativa já condicionada na seção 4;
 ## 11. Estado documental
 
 Este é o contrato público, não uma implementação nem uma aprovação de implantação.
+A [emenda HQR-20](hqr-20-amendment.md) substitui as partes listadas na seção 9 dela; Guilherme a aprovou em 2026-11-15.
 O [registro de bootstrap](bootstrap.md) informa a fase corrente e a confirmação de revisão necessária antes de S1.
 
 ## Reference definitions

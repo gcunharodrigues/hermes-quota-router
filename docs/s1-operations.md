@@ -1,4 +1,19 @@
-# Operação S1 — proposta pendente de alvo admitido
+# Operação S1 — gestão e receita
+
+## Situação do run 4
+
+O [run 4](s1-installed-test.md#run-4--ciclo-de-vida-completo-com-rede-2026-11-15) exercitou todo o roteiro abaixo no alvo de teste com o harness `tests/installed/lifecycle.py`.
+`hermes plugins remove` apaga também a entrada `plugins.entries.hermes-quota-router` (modo e declaração); quem quiser preservá-las deve copiar a configuração antes.
+O texto do run 2 abaixo é histórico.
+
+## Situação do run 2
+
+O [ensaio instalado](s1-installed-test.md) substitui as afirmações históricas abaixo de ausência de alvo/publicação por um recibo concreto.
+O candidato `ad3e180f32adea3c25a2ef91280f1f6308729a47` foi instalado pelo GitHub desabilitado no Docker admitido.
+A ativação foi recusada pelo PM e está bloqueada, sem repetir enable ou usar edição manual de seleção.
+O roteiro abaixo continua contrato/proposta para os passos não exercitados, não evidência de conclusão.
+
+## Limites e biblioteca
 
 Este roteiro não autoriza instalação, provisionamento, acesso a contas, inferência, publicação ou produção.
 O código S1 é gestão opcional, não um roteador de franquias qualificado.
