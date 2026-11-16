@@ -76,7 +76,18 @@ O probe instalado da S1 enviava `--json` também ao rollback S1, que recusa o ar
 Testes novos em `tests/unit/test_s2_render.py` e `tests/harness/test_s2_probe_harness.py`.
 - Re-revisão `deleg_96dfed6d` de `7c7f3b5`: NO-GO com três achados médios: créditos apareciam disponíveis quando a política rejeitava a leitura por datas inconsistentes ou negação contraditória do provedor; faltava a fonte da leitura; `explain` atribuía à cota semanal geral um bloqueio da cota semanal do Opus.
 - Correções: o texto usa o veredito de conta da própria política (`policy.eligibility`) e diz que nem a franquia nem os créditos serão usados; mostra a fonte geral e a de cada leitura; a política registra `blocked_window` (tipo e família da janela que bloqueou), campo aditivo usado só no texto.
-- Pendente: nova re-revisão, publicação, ensaio instalado, reinstalação no Hermes de trabalho, DEMO e aceite.
+- Re-revisão `deleg_75dbe65d` de `22295ef`: GO, sem achados bloqueantes; 109 testes.
+- Publicação (aprovada por Guilherme): candidato `6abf28f04d53cba1eb7a520ef494e4cd3867363d`, árvore de `22295ef` sobre `214f028`, na branch remota nova `hermes/2026-11-15-hqr-s2-readable`; `main` sem mudança; histórico local não publicado.
+- Ensaio instalado run 4 (`hqr-s1-test`, candidato `6abf28f`, rollback `ad3e180`): 15 de 15 passos; os recibos mostram `--json` só nas revisões com `render.py`.
+- Troca no Hermes de trabalho: backup datado com SHA256; `214f028` desligado (OFF), desabilitado e removido sem mudar chaves fora do plugin; piloto `s2_pilot.py --branch hermes/2026-11-15-hqr-s2-readable` com `6abf28f`: 9 de 9 passos; plugin em Observe.
+O piloto ganhou `--branch`, com a branch anterior como padrão.
+- Gateway reiniciado sem `--interrupt`, com a autorização de Guilherme; consumidor novo devolve o `status` em texto.
+- DEMO, segunda tentativa: Guilherme achou o texto bom, mas leu que o plugin não lia a Anthropic e lembrou que a conversa usa Opus.
+Verificação: a leitura da Anthropic funciona (semana 34%, quatro leituras seguidas); a API da Anthropic não envia janela de 5 h nem semana própria do Opus nesta conta (campos nulos), e o Opus consome a semana geral; a lista nova `limits` traz só a semana do Fable, que o leitor do Hermes não lê (HQR-23); o leitor do Hermes não repassa os créditos da Anthropic; o modelo da conversa mostrado é o padrão do profile, não o da sessão aberta.
+- Texto corrigido: a linha do Claude explica a falta das janelas e quem não informa os créditos; a conversa aparece como modelo padrão do profile para sessões novas; `str.capitalize` deixava de minúscula "Hermes" e "Claude" e foi trocado.
+- Revisão `deleg_8de0afbc` de `34f505d`: NO-GO num achado médio: `--branch` aceitava padrões, que `git ls-remote` expande, e a checagem olhava só o primeiro SHA.
+Correção: o nome da branch precisa ser literal, e a checagem exige exatamente uma linha com o SHA e o ref completo; harness `tests/harness/test_s2_pilot_harness.py`.
+- Pendente: re-revisão, publicação, ensaio instalado, reinstalação, restart do processo do app, DEMO e aceite.
 - Leitura de `rate_limit.<janela>.limit_window_seconds` para qualificar a duração das janelas do Codex: aprovada por Guilherme em 2026-11-15 e incluída na lista fechada da seção 14 da emenda; o valor não é guardado nem exibido.
 
 ## Achado durante a execução

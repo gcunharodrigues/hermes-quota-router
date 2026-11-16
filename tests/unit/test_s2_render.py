@@ -160,6 +160,17 @@ class RenderTests(unittest.TestCase):
         self.assertIn("a cota semanal do Opus acabou", explain)
         self.assertNotIn("**Claude**: a cota semanal acabou", explain)
 
+    def test_anthropic_line_explains_missing_windows_credits_and_conversation_scope(self):
+        m = self.observe(reader_for(openai_codex=codex(100), anthropic=claude(34)))
+        text = render("status", payload(m, "status"))
+        claude_line = next(l for l in text.splitlines() if "**Claude**" in l)
+        self.assertIn("não informa janela de 5 h nem cota própria do Opus", claude_line)
+        self.assertIn("O Hermes não informa ao plugin os créditos do Claude", claude_line)
+        self.assertIn("uso de créditos desligado nas configurações", claude_line)
+        self.assertIn("Conversa (modelo padrão do profile, vale em sessões novas)", text)
+        opus = render("status", payload(self.observe(reader_for(openai_codex=codex(100), anthropic=claude(34, opus_used=10))), "status"))
+        self.assertNotIn("cota própria do Opus", opus)
+
     def test_hysteresis_uses_the_effective_setting(self):
         m = self.observe(reader_for(openai_codex=codex(10), anthropic=claude(10)), **{"limits.hysteresis_pct": 25})
         explain = render("explain", payload(m, "explain"))

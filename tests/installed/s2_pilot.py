@@ -1,6 +1,6 @@
 """D1 pilot: install the reviewed S2 candidate in the working Hermes, Observe with real quota readings, rehearse removal.
 
-Usage: python3 tests/installed/s2_pilot.py <new receipt dir> --candidate <SHA40> --runner <bootstrap runner>
+Usage: python3 tests/installed/s2_pilot.py <new receipt dir> --candidate <SHA40> --runner <bootstrap runner> [--branch <published branch>]
 `--runner` is a shell script that runs a Python file with the working Hermes bootstrap and never starts an agent.
 Steps follow decisions/s2-plan.md, "Piloto no Hermes de trabalho (D1)"; the run stops at the first failure.
 No gateway restart: if one were needed, the pilot stops and asks Guilherme.
@@ -143,11 +143,32 @@ def fingerprint():
             "plugins": sorted(p.name for p in (HOME / "plugins").iterdir())}
 
 
+BRANCH = re.compile(r"^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$")
+
+
+def branch_arg(value):
+    """A literal branch name: no glob, range or reflog characters, no empty, dot or `.lock` component."""
+    parts = value.split("/")
+    if not BRANCH.match(value) or any(p in ("", ".", "..") or p.startswith((".", "-")) or p.endswith(".lock") for p in parts) \
+            or ".." in value:
+        raise argparse.ArgumentTypeError(f"not a literal branch name: {value!r}")
+    return value
+
+
+def published_head(ls_remote_output, branch, candidate):
+    """Rows of `git ls-remote <url> refs/heads/<branch>`; passes only with exactly that ref at the candidate."""
+    rows = [line.split("\t") for line in ls_remote_output.splitlines() if line.strip()]
+    check(rows == [[candidate, f"refs/heads/{branch}"]], "candidate is not the head of exactly the published branch", rows)
+    return rows
+
+
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument("receipts")
     parser.add_argument("--candidate", required=True)
     parser.add_argument("--runner", required=True)
+    parser.add_argument("--branch", default="hermes/2026-11-15-hqr-s2", type=branch_arg,
+                        help="published branch whose head must be the candidate")
     args = parser.parse_args(argv)
     if not SHA40.match(args.candidate):
         parser.error("--candidate must be a 40-character commit SHA")
@@ -159,8 +180,8 @@ def main(argv):
         raw = pilot.raw()
         check(raw["entry"] is None and not any(raw["listed"].values()), "plugin already configured", raw)
         check(not (HOME / "plugins" / PLUGIN).exists(), "plugin already installed")
-        remote = pilot.run(["git", "ls-remote", GITHUB, "refs/heads/hermes/2026-11-15-hqr-s2"]).stdout.split()
-        check(remote[:1] == [args.candidate], "candidate is not the published branch head", remote)
+        remote = published_head(pilot.run(["git", "ls-remote", GITHUB, f"refs/heads/{args.branch}"]).stdout,
+                                args.branch, args.candidate)
         return {"config": raw, "host": fingerprint(), "remote": remote}
     before = pilot.step("preflight", preflight)
 

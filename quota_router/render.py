@@ -110,6 +110,11 @@ def when(value, with_weekday=True):
     return f"{day}{moment:%d/%m} às {moment:%H:%M}"
 
 
+def first_upper(text):
+    """Capitalize the first letter only; str.capitalize would lower-case names such as Hermes or Claude."""
+    return text[:1].upper() + text[1:]
+
+
 def pct(value):
     text = f"{value:.1f}".rstrip("0").rstrip(".")
     return text.replace(".", ",") + "%"
@@ -180,7 +185,8 @@ def credit_text(provider, reading, settings):
     allowed = settings.get(f"credits.{provider}")
     credits = reading.get("credits") or {}
     if not credits.get("visible"):
-        return "créditos não verificáveis pelo plugin" + ("; uso desligado" if not allowed else "; não serão usados")
+        hidden = f"o Hermes não informa ao plugin os créditos do {NAMES[provider]}"
+        return hidden + ("; uso de créditos desligado nas configurações" if not allowed else "; créditos não serão usados")
     limits = (credits.get("overage_limit_reached"), credits.get("spend_reached"))
     funded = credits.get("has_credits") is True and credits.get("balance_positive") is True
     if True in limits:
@@ -211,11 +217,14 @@ def provider_line(provider, reading, settings, decided_at=None):
         state = over(window, settings)
         tail = f" ({state})" if state else ""
         parts.append(f"{window_name(window)} {pct(window['used_pct'])} usada{tail}, renova {when(window['reset_at'])}")
+    kinds = {w["kind"] for w in reading["windows"]}
+    if provider == "anthropic" and "week" in kinds and not kinds & {"session", "model_week"}:
+        parts.append("a Anthropic não informa janela de 5 h nem cota própria do Opus, que usa esta cota semanal")
     unusable = account_block(reading, settings, decided_at)
     if unusable:
         credit = f"Leitura não confiável ({BLOCKS[unusable]}): nem a franquia nem os créditos serão usados"
     else:
-        credit = credit_text(provider, reading, settings).capitalize()
+        credit = first_upper(credit_text(provider, reading, settings))
     age = reading.get("age_s")
     origin = SOURCES.get(reading.get("source"), "fonte não identificada")
     read = f" Lida há {int(age)} s ({origin})." if isinstance(age, (int, float)) else f" Fonte: {origin}."
@@ -302,7 +311,7 @@ def changes(decisions, approved_only):
             grouped.setdefault(key, []).append((label[len("a rota "):], change))
     lines = []
     if conversation:
-        lines.append(f"• Conversa: {conversation}")
+        lines.append(f"• Conversa (modelo padrão do profile, vale em sessões novas): {conversation}")
     for (old, new, same), items in sorted(grouped.items(), key=lambda kv: -len(kv[1])):
         names = ", ".join(n for n, _ in items)
         if same:
@@ -475,7 +484,7 @@ def explain_text(status):
         for label, decision in consumers(decisions):
             change = decision.get("would_change") if approved_only else decision.get("proposal_change")
             if change:
-                name = label.replace("a rota ", "").replace("a conversa", "Conversa").replace("o cron", "Cron")
+                name = label.replace("a rota ", "").replace("a conversa", "Conversa (padrão do profile, sessões novas)").replace("o cron", "Cron")
                 rows.append(f"• {name}: {route(change['from'])} → {route(change['to'])}")
         if rows:
             lines += ["", f"**{title}**"] + rows
