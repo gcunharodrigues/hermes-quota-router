@@ -49,7 +49,7 @@ class RenderTests(unittest.TestCase):
         text = render("status", payload(m, "status"))
         self.assert_human(text)
         self.assertIn("Nenhum provedor pode ser usado agora", text)
-        self.assertIn("sem dados do provedor", text)
+        self.assertIn("o provedor não respondeu, ou não há login", text)
 
     def test_off_explain_config_and_errors(self):
         m, _, _ = manager(Context(), reader_for())
@@ -152,7 +152,7 @@ class RenderTests(unittest.TestCase):
         native["quota"] = dict(native["quota"], source="native_account_usage")
         self.assertIn("(via leitor de cotas do Hermes)", render("status", native))
         missing = payload(self.observe(reader_for(openai_codex=None, anthropic=claude(10))), "status")
-        self.assertIn("sem dados do provedor", render("status", missing))
+        self.assertIn("o provedor não respondeu, ou não há login", render("status", missing))
 
     def test_explain_names_the_model_window_that_blocks(self):
         m = self.observe(reader_for(openai_codex=codex(100), anthropic=claude(40, opus_used=100)))
@@ -170,6 +170,14 @@ class RenderTests(unittest.TestCase):
         self.assertIn("Conversa (modelo padrão do profile, vale em sessões novas)", text)
         opus = render("status", payload(self.observe(reader_for(openai_codex=codex(100), anthropic=claude(34, opus_used=10))), "status"))
         self.assertNotIn("cota própria do Opus", opus)
+
+    def test_unanswered_anthropic_reading_names_the_possible_rate_limit(self):
+        text = render("status", payload(self.observe(reader_for(openai_codex=codex(100), anthropic=None)), "status"))
+        claude_line = next(l for l in text.splitlines() if "**Claude**" in l)
+        self.assertIn("o provedor não respondeu, ou não há login", claude_line)
+        self.assertIn("uma causa possível é o limite de consultas da API de uso da Anthropic", claude_line)
+        codex_text = render("status", payload(self.observe(reader_for(openai_codex=None, anthropic=claude(10))), "status"))
+        self.assertNotIn("Anthropic, que já respondeu", next(l for l in codex_text.splitlines() if "**Codex**" in l))
 
     def test_hysteresis_uses_the_effective_setting(self):
         m = self.observe(reader_for(openai_codex=codex(10), anthropic=claude(10)), **{"limits.hysteresis_pct": 25})

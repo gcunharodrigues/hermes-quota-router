@@ -28,6 +28,8 @@ A preferência usada na histerese vale para uma revisão das configurações, do
 ## Leituras
 
 O plugin chama só `agent.account_usage.fetch_account_usage(provider, read_only=True)` e não vê tokens.
+O leitor nativo devolve `None` sem motivo quando a busca falha; para a Anthropic, uma causa possível é o limite de consultas da API de uso, que respondeu 429 com `Retry-After: 300` depois de cinco consultas seguidas, e o Hermes também a consulta depois de cada turno.
+O plugin não usa a última leitura guardada pelo Hermes (`agent.account_usage_cache`), porque a vaga lida sem credencial não prova de qual conta ela é.
 Do corpo `raw` do Codex ele guarda apenas indicadores de créditos (há créditos, ilimitado, saldo positivo, limite de excedente, limite de gasto) e a disponibilidade do Astra; o valor do saldo e o resto do corpo não são guardados.
 Para confirmar a duração de cada janela do Codex, o plugin lê também `rate_limit.<janela>.limit_window_seconds`, sem guardar: o host rotula pela posição uma janela de duração ausente ou desconhecida, e esse rótulo não vale como prova; cada janela emitida precisa corresponder, na mesma ordem, a uma janela publicada com 5 h ou 7 dias; janela sem essa duração, ou janela publicada que o host descartou, deixa a leitura desconhecida.
 Janelas com folga e `rate_limit.allowed` falso ou `limit_reached` verdadeiro se contradizem: o Codex fica fora da franquia e dos créditos.

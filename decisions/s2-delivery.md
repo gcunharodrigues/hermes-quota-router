@@ -87,7 +87,17 @@ Verificação: a leitura da Anthropic funciona (semana 34%, quatro leituras segu
 - Texto corrigido: a linha do Claude explica a falta das janelas e quem não informa os créditos; a conversa aparece como modelo padrão do profile para sessões novas; `str.capitalize` deixava de minúscula "Hermes" e "Claude" e foi trocado.
 - Revisão `deleg_8de0afbc` de `34f505d`: NO-GO num achado médio: `--branch` aceitava padrões, que `git ls-remote` expande, e a checagem olhava só o primeiro SHA.
 Correção: o nome da branch precisa ser literal, e a checagem exige exatamente uma linha com o SHA e o ref completo; harness `tests/harness/test_s2_pilot_harness.py`.
-- Pendente: re-revisão, publicação, ensaio instalado, reinstalação, restart do processo do app, DEMO e aceite.
+- Re-revisão `deleg_c2eba583` de `8809e3f`: GO; 113 testes.
+- Com o sim de Guilherme: candidato `2a94c81604fb202d43fe610f4507d2e96f4310a6` (árvore de `8809e3f` sobre `6abf28f`) publicado em `hermes/2026-11-15-hqr-s2-readable`; ensaio instalado run 5: 15 de 15; troca no Hermes de trabalho com backup datado, remoção de `6abf28f` e piloto `s2_pilot.py`: 9 de 9; plugin em Observe; consumidor novo devolve `status`, `explain` e `config` em texto.
+- Processos que guardam o plugin antigo na memória: gateway reiniciado; backend do app desktop encerrado com SIGTERM; serviço do dashboard, que atende o app do iPhone, reiniciado depois da resposta.
+- DEMO, terceira tentativa, no app desktop do Mac: o Claude apareceu como "leitura indisponível" e a recomendação foi Codex com créditos.
+Causa medida: a API de uso da Anthropic responde 429 com `retry-after: 300` depois de cinco consultas seguidas; o Hermes a consulta depois de cada turno, e o leitor nativo devolve `None` sem dizer o motivo.
+O teste de rajada que confirmou o limite também gastou a cota de consultas por cinco minutos.
+- Primeira correção (`f625623`): usar a última leitura guardada pelo Hermes (`cached_account_usage`) quando a busca falha.
+Revisão `deleg_21b363ea`: NO-GO (HQR-CACHE-01, alto): a vaga legada do cache não está ligada à conta selecionada agora; depois de troca de conta ou logout, a leitura de outra conta passaria como válida, e só lendo credenciais o plugin provaria a ligação.
+Também (HQR-CACHE-02, baixo): o texto e a documentação apresentavam o limite de cinco minutos como contrato, e `None` não identifica o motivo.
+- Correção final: o fallback saiu; o texto da leitura sem resposta da Anthropic cita o limite de consultas como causa possível e o 300 s como resposta observada; a ligação conta–leitura sem token vai ao backlog do core (HQR-25).
+- Pendente: revisão, publicação, ensaio, reinstalação, restarts, DEMO e aceite.
 - Leitura de `rate_limit.<janela>.limit_window_seconds` para qualificar a duração das janelas do Codex: aprovada por Guilherme em 2026-11-15 e incluída na lista fechada da seção 14 da emenda; o valor não é guardado nem exibido.
 
 ## Achado durante a execução

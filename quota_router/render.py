@@ -198,6 +198,18 @@ def credit_text(provider, reading, settings):
     return "créditos disponíveis e permitidos, só depois das franquias" if allowed else "há créditos, mas o uso está desligado"
 
 
+ANTHROPIC_LIMIT = ("uma causa possível é o limite de consultas da API de uso da Anthropic, que já respondeu "
+                   "\"tente em 300 s\" depois de poucas consultas seguidas; o Hermes também a consulta a cada turno")
+
+
+def unknown_text(provider, reading, settings):
+    reason = reading.get("reason")
+    if reason in ("no_snapshot", "reader_error"):
+        text = "o provedor não respondeu, ou não há login"
+        return f"{text}; {ANTHROPIC_LIMIT}" if provider == "anthropic" else text
+    return READING_REASONS.get(reason, "leitura não confiável")
+
+
 def account_block(reading, settings, decided_at):
     """Account-level policy verdict (no model windows) when it makes both tiers unusable; None otherwise."""
     try:
@@ -210,7 +222,7 @@ def account_block(reading, settings, decided_at):
 def provider_line(provider, reading, settings, decided_at=None):
     name = NAMES[provider]
     if reading["state"] != "ok":
-        return f"• **{name}**: leitura indisponível ({READING_REASONS.get(reading['reason'], 'leitura não confiável')})."
+        return f"• **{name}**: leitura indisponível ({unknown_text(provider, reading, settings)})."
     parts = []
     order = {"week": 0, "session": 1, "model_week": 2}
     for window in sorted(reading["windows"], key=lambda w: order[w["kind"]]):
