@@ -2,7 +2,7 @@
 
 ## 2026-11-17
 
-- [Definições propostas da S4 e da fatia de auxiliares](s4-definition.md): rascunhos com decisões abertas D-S4-1 a D-S4-5 e [D-AUX-1 a D-AUX-4](aux-definition.md); backlog HQR-01, HQR-26, HQR-33, HQR-34 e HQR-35 fechado com evidência; nenhuma implementação.
+- [Definições propostas da S4 e da fatia de auxiliares](s4-definition.md): rascunhos com decisões abertas D-S4-1 a D-S4-6 e [D-AUX-1 a D-AUX-6](aux-definition.md); backlog HQR-01, HQR-26, HQR-33, HQR-34 e HQR-35 fechado com evidência; nenhuma implementação.
 
 - [Aceite da HQR-38](hqr-38-delivery.md#aceite-de-guilherme-2026-11-17): Guilherme aceitou a fatia, autorizou squash merge na `main` e push, e classificou HQR-42 como aceitável.
 
