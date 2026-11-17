@@ -30,11 +30,15 @@ O volume de chamadas de cada tarefa não foi medido.
 ## Resultado utilizável proposto
 
 - As tarefas incluídas em D-AUX-3 passam a ser grupos do roteador, com a mesma linha de base, diário, releitura, exclusão por edição manual e OFF com restauração exata da S3.
-- A escolha de provedor segue D-AUX-1 e usa a matriz de estados da HQR-38, o que cobre os tipos de assinatura pedidos em HQR-39: janela de 5 h e semanal da Anthropic, janela semanal do Codex, estados desconhecidos e créditos.
+- A escolha de provedor segue D-AUX-1 e usa a matriz de estados da HQR-38, o que cobre os tipos de assinatura pedidos em HQR-39 para os dois provedores: plano com janela de 5 h e semanal, plano só semanal, estados desconhecidos e créditos.
+- Plano mensal segue a HQR-38: o provedor fica bloqueado com `monthly_plan_unsupported` e as auxiliares não são movidas para ele ([especificação HQR-38](hqr-38-spec.md)).
 - Com Claude esgotado e `credits.anthropic` desligado, nenhuma auxiliar vai para Claude; com os dois esgotados, nenhuma chave muda, como em AC-22.
 - Modelo e esforço do lado Claude seguem o mapa de D-AUX-2, com esforço próprio por provedor como no precedente D9.
 - Nova configuração `consumers.auxiliary`, desligada por padrão, liga e desliga a função como as demais da seção 13 da emenda.
-- AC-18, AC-19, AC-20, AC-22, AC-23 e AC-24 passam a valer para os grupos auxiliares; AC-21 ganha o caso de uma tarefa auxiliar executada depois da decisão.
+- AC-18, AC-19, AC-20, AC-23 e AC-24 passam a valer para os grupos auxiliares; AC-21 ganha o caso de uma tarefa auxiliar executada depois da decisão.
+- AC-22 vale na primeira parte (sem candidato elegível, nenhuma chave muda e o status mostra motivo e reset); a segunda parte, registro da idade da decisão por tarefa iniciada, fica como limite para auxiliares enquanto não houver registro por chamada.
+- AC-25 passa a exigir cenários novos para auxiliares no [mapa de cenários](hqr-20-scenarios.md), substituindo o cenário C11 ("auxiliares não governados") para as tarefas incluídas.
+- Aprovada D-AUX-6, a frase do README que declara chamadas auxiliares não governadas passa a descrever as tarefas incluídas e as que continuam fora.
 
 ## Decisões abertas
 

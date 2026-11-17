@@ -51,13 +51,14 @@ O retorno à versão anterior com estado migrado só foi provado em ensaio sint�
 ## Critérios de aceite
 
 1. A instalação pela receita reproduz HEAD e arquivos rastreados do SHA40, sem arquivos ignorados fora da allowlist, e gera recibo com versão do host, Python e schema do estado.
-2. Em cada profile escolhido, o status em Observe mostra `source_qualified = true`, `quota.states` para os dois provedores e `routing_blocks` vazio; leitura desconhecida aparece como desconhecida, e a conferência é repetida depois do intervalo de espera informado, sem consultas extras.
+2. Em cada profile autorizado para Observe, o status mostra `source_qualified = true`, `quota.states` para os dois provedores e `routing_blocks` vazio; leitura desconhecida aparece como desconhecida, e a conferência é repetida depois do intervalo de espera informado, sem consultas extras.
 3. Nenhum profile passa para Auto sem pedido explícito de Guilherme para aquele profile.
 4. O status de um profile inscrito mostra os profiles não inscritos, e um profile novo criado pelo procedimento sai com o plugin no modo e nas configurações de D-S4-3, conferidos por leitura da configuração.
 5. O procedimento HQR-41 é seguido numa instalação real e o status do Desktop traz os campos da versão instalada.
 6. A prova de rollback escolhida em D-S4-5 é executada e registrada; com prova no Docker, OFF, restauração e leitura de volta são conferidos com estado migrado.
 7. As notas da release listam os limites abertos: erro de cota real não observado, HQR-23, HQR-25, HQR-27, HQR-28, HQR-36, HQR-40 e a divergência de OFF entre CLI e Desktop.
 8. Árvore e histórico publicados não contêm caminhos, nomes ou identificadores da máquina do operador.
+9. Proveniência e autorização (HQR-06): o SHA40 da release é a revisão revisada e aceita por Guilherme; push, publicação da release e instalação em cada profile têm autorização explícita registrada; a leitura de volta do remoto mostra o rótulo da release apontando para esse SHA40, e a leitura de volta de cada profile mostra esse HEAD instalado.
 
 ## Não objetivos
 
