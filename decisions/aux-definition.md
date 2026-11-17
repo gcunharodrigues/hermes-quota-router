@@ -51,6 +51,18 @@ O volume de chamadas de cada tarefa não foi medido.
 | D-AUX-5 | Tarefas em `auto` | Qualificar nesta fatia; manter fora e abrir item próprio no backlog | Manter fora e abrir item próprio, porque a escolha nativa não é controlada pelo plugin |
 | D-AUX-6 | Aprovar a emenda da regra "auxiliares fora" | Sim; não | Sim, restrita às tarefas incluídas e sem interceptar chamadas iniciadas |
 
+## Decisões de Guilherme, 2026-11-17
+
+Decidido, em resposta à lista apresentada na conversa de 2026-11-17:
+
+- D-AUX-4: fazer a fatia de auxiliares antes da S4 ("sim fazer auxiliares primeiro").
+- D-AUX-6: as auxiliares incluídas passam a ser governadas ("ficam dentro agora").
+- D-AUX-1, D-AUX-2 e D-AUX-3: seguir as propostas do agente.
+- D-AUX-3, esclarecimento: `image_gen` não é tarefa de `auxiliary.*` e fica fixa no Codex; entre as onze tarefas observadas, nenhuma exige recurso exclusivo do Codex pela leitura do código (`voice_chat` e `tts_audio_tags` usam modelo de texto), e a confirmação final fica para a qualificação.
+- D-AUX-5: em aberto; Guilherme perguntou o que é o modo `auto`, e a resposta registrada abaixo aguarda a decisão.
+
+Fato verificado para D-AUX-5: uma tarefa auxiliar com provedor `auto` usa primeiro o provedor e o modelo principais do profile, depois uma cadeia de alternativas; portanto já acompanha a conversa roteada pelo Auto, com o modelo principal em vez de um modelo menor.
+
 ## Critérios de aceite
 
 1. Em Observe, o status mostra para cada tarefa incluída o modelo atual, a escolha, o estado dos provedores e o que mudaria, e grava zero chaves fora do subtree do plugin.

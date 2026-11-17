@@ -48,6 +48,16 @@ O retorno à versão anterior com estado migrado só foi provado em ensaio sint�
 | D-S4-5 | Prova de rollback com estado migrado | Exercitar no Docker antes da release; aceitar a prova sintética | Exercitar uma vez no Docker antes da release |
 | D-S4-6 | Publicar a release no GitHub | Sim; não | Sim, depois do aceite da fatia e com a pergunta própria antes do push |
 
+## Decisões de Guilherme, 2026-11-17
+
+Decidido, em resposta à lista apresentada na conversa de 2026-11-17:
+
+- D-S4-1: instalar em todos os profiles.
+- D-S4-2: tag `v0.3.0` com GitHub Release.
+- D-S4-3: profiles começam em Auto ("começa auto"), em vez da proposta OFF → Observe; isso é o pedido explícito do critério 3 para os profiles da S4, e o Auto só aplica decisões quando a qualificação do profile passa.
+- D-S4-4, D-S4-5 e D-S4-6: seguir as propostas do agente; em D-S4-6, Guilherme pediu cuidado com as referências nos arquivos publicados (critério 8).
+- A S4 começa depois da fatia de auxiliares (D-AUX-4).
+
 ## Critérios de aceite
 
 1. A instalação pela receita reproduz HEAD e arquivos rastreados do SHA40, sem arquivos ignorados fora da allowlist, e gera recibo com versão do host, Python e schema do estado.
