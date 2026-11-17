@@ -5,6 +5,8 @@
 - [Emenda HQR-20 — próximas tarefas](hqr-20-amendment.md) — simplificação pós-S1 aprovada, com decisões, configurações e créditos.
 - [S3 — entrega local e pendências](s3-delivery.md) — D18 instalada em Observe e correções locais HQR-34/HQR-35; backoff e diagnósticos opcionais do leitor não alteram a política, nem qualificam a janela Desktop ou autorizam Auto.
 - [HQR-38 — entrega aceita](hqr-38-delivery.md) — candidata `cc878bc` demonstrada no Docker offline e no piloto real do Hermes de trabalho: Observe, Auto com conversa e dez rotas, sessão nova, subagente e cron em Opus e OFF com restauração; fallback aceito com prova de código e testes; fatia aceita por Guilherme em 2026-11-17, com erro de cota real como observação natural.
+- [S4 — definição proposta](s4-definition.md) — release estável, instalação nos profiles escolhidos, onboarding, recarga do Desktop e rollback; decisões D-S4-1 a D-S4-5 abertas.
+- [Fatia de auxiliares — definição proposta](aux-definition.md) — HQR-29/HQR-39: auxiliares fixadas no Codex seguem a decisão de cota com Terra → Sonnet e Luna → Haiku; decisões D-AUX-1 a D-AUX-4 abertas.
 - [HQR-38 — política de troca e tipos de assinatura](hqr-38-spec.md) — proposta com as decisões D-28 a D-31 de 2026-11-17, rede de segurança nativa e correções de leitura por plano.
 - [S3 — plano](s3-plan.md) — Auto nas próximas tarefas com o mapa aprovado, no alvo de teste e depois no Hermes de trabalho.
 - [S2 — entrega](s2-delivery.md) — execução, provas e aceite da S2.
