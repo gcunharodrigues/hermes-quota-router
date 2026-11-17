@@ -1,7 +1,7 @@
 ---
 type: Product Definition
 title: S4 — promoção, release e onboarding
-description: Definição proposta da última fatia do plano HQR-20: release estável, instalação nos profiles escolhidos, onboarding de profiles novos, recarga do Desktop e rollback; decisões D-S4-1 a D-S4-5 abertas.
+description: Definição proposta da última fatia do plano HQR-20 — release estável, instalação nos profiles escolhidos, onboarding de profiles novos, recarga do Desktop e rollback; decisões D-S4-1 a D-S4-5 abertas.
 status: draft
 ---
 

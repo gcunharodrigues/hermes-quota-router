@@ -1,7 +1,7 @@
 ---
 type: Product Definition
 title: Fatia de auxiliares — roteamento de auxiliary.* por tipo de assinatura
-description: Definição proposta para HQR-29 e HQR-39: as tarefas auxiliares fixadas no Codex passam a seguir a decisão de cota, com mapa Terra → Sonnet e Luna → Haiku e exceções; decisões D-AUX-1 a D-AUX-4 abertas.
+description: Definição proposta para HQR-29 e HQR-39 — as tarefas auxiliares fixadas no Codex passam a seguir a decisão de cota, com mapa Terra → Sonnet e Luna → Haiku e exceções; decisões D-AUX-1 a D-AUX-4 abertas.
 status: draft
 ---
 
