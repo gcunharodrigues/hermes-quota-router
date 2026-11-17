@@ -133,8 +133,8 @@ class RenderTests(unittest.TestCase):
     def test_unusable_readings_never_advertise_credits(self):
         far = Snapshot("openai-codex", "usage_api", NOW, (Window("Weekly", 100, NOW + timedelta(days=8)),),
                        raw={"credits": CREDITS_OK, "spend_control": {"reached": False}, "rate_limit": codex_rate_limit(WEEK)})
-        cases = {"inconsistent": (far, "as datas da leitura não fecham"),
-                 "denied": (codex(10, allowed=False, credits=CREDITS_OK), "o provedor nega o uso mas mostra franquia livre")}
+        # decisions/hqr-38-spec.md, A23: an inconsistent window no longer blocks verified credits; see test_hqr38_render.py.
+        cases = {"denied": (codex(10, allowed=False, credits=CREDITS_OK), "o provedor nega o uso mas mostra franquia livre")}
         for name, (snap, reason) in cases.items():
             with self.subTest(name):
                 result = payload(self.observe(reader_for(openai_codex=snap, anthropic=claude(100))), "status")
@@ -195,17 +195,21 @@ class RenderTests(unittest.TestCase):
         m.command("config approve-map base")
         roles = copy.deepcopy(ctx.settings["roles"])
         roles.pop("general")
-        m2, _, _ = manager(Context({"mode": "observe", "roles": roles}), reader)
+        m2, _, config = manager(Context({"mode": "observe", "roles": roles}), reader)
+        config['model'].pop('base_url')
+        config['model'].pop('api_mode')
+        m2.profile = lambda: 'default'
+        m2.compatible = lambda: {'ok': True, 'reasons': []}
         result = payload(m2, "status")
         self.assertNotIn("roles", result.get("settings_invalid") or {})
         text = render("status", result)
         self.assertIn("**O que mudaria** (mapa aprovado)", text)
-        self.assertIn("**O que mudaria** (proposta para os papéis ainda sem mapa aprovado)", text)
-        proposed = text.split("proposta para os papéis ainda sem mapa aprovado)")[1].split("\n\n")[0]
-        self.assertIn("general", proposed)
+        self.assertNotIn("**O que mudaria** (proposta para os papéis ainda sem mapa aprovado)", text)
+        self.assertIn("general fora do Auto; papel sem mapa aprovado", text)
         explain = render("explain", payload(m2, "explain"))
         self.assertIn("**Mudanças por papel (mapa aprovado)**", explain)
-        self.assertIn("**Mudanças por papel (proposta, ainda não aplicada)**", explain)
+        self.assertNotIn("**Mudanças por papel (proposta, ainda não aplicada)**", explain)
+        self.assertIn("general fora do Auto; papel sem mapa aprovado", explain)
 
     def test_explain_lists_variant_mappings_and_status_shows_reading_age(self):
         m = self.observe(reader_for(openai_codex=codex(100), anthropic=claude(31)))

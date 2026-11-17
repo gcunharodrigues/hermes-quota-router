@@ -207,7 +207,7 @@ Essa exigência pode depender da extensão nativa já condicionada na seção 4;
 - Não persistir prompts, respostas, headers, tokens, emails ou valores monetários no estado compartilhado ou em logs.
 - Expor status/diagnóstico com fonte, idade da leitura, rota, razão, versão/canal e divergência de estado salvo/efetivo.
 - Impedir cruzamento de caminhos/symlinks entre ambientes e validar schemas de política/metadados remotos.
-- Releases devem conter apenas código, testes, docs públicos, licença autorizada e provenance, nunca material privado do estudo.
+- Releases devem conter apenas código, testes, docs públicos, licença autorizada e provenance, nunca material operacional não distribuído.
 - Não prometer isolamento de segredo só por usar variável de ambiente, perfil ou criptografia em repouso.
 - Retenção proposta para eventos locais de decisão: 7 dias, configurável; exportação saneada e exclusão sob demanda.
 - Não reduzir gates, mudar testes protegidos ou ampliar capabilities para acomodar o roteador.
@@ -233,7 +233,7 @@ Essa exigência pode depender da extensão nativa já condicionada na seção 4;
 | AC-11 | Instalação de Teste, instalação de Produção e promoção têm escolhas e recibos distintos; revisão mutável ou artefato divergente é recusado. |
 | AC-12 | Desativar, remover, reinstalar e rollback exercitados no alvo; estado em voo e necessidade de reload/restart são visíveis e não deixam backend órfão. |
 | AC-13 | Criar profile de teste após instalar o plugin e verificar onboarding/enforcement global autorizado; ausência inesperada bloqueia o domínio gerenciado e aparece no diagnóstico. |
-| AC-14 | Pacote/provenance públicos não contêm dados do estudo; scan, allowlist e inspeção do histórico/conteúdo publicado vinculados à revisão exata. |
+| AC-14 | Pacote/provenance públicos não contêm dados operacionais não distribuídos; scan, allowlist e inspeção do histórico/conteúdo publicado vinculados à revisão exata. |
 | AC-15 | Testes reais e ativação de produção têm autorizações e limites próprios; resultado sintético ou código commitado não substitui prova instalada. |
 
 ## 11. Estado documental

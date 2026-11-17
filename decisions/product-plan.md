@@ -16,7 +16,7 @@ Este plano não é autorização de BUILD, publicação, instalação, credencia
 - Código/distribuição propostos: repositório limpo `gcunharodrigues/hermes-quota-router`.
 - Primeiro destino utilizável: Hermes de teste isolado, em versão conhecida, com o plugin efetivamente instalado a partir de revisão GitHub escolhida.
 - Destino final: profiles de produção explicitamente escolhidos por o responsável, com recibo de código/canal/estado efetivos.
-- Nenhum histórico de contas, inventário operacional ou evidência privada do estudo será usado como ancestral do repositório publicado.
+- Nenhum histórico de contas, inventário operacional ou evidência operacional não distribuída será usado como ancestral do repositório publicado.
 
 ## 2. Preparação e confirmação de execução
 
@@ -181,7 +181,7 @@ Gates documentais deste bootstrap:
 - Gitleaks instalado, com saída redigida e escopo exato do candidato; não prova ausência universal de segredo.
 
 Contrato futuro de arquivos: `plugin.yaml`, `__init__.py`, biblioteca `quota_router/`, testes `tests/unit/`, `tests/integration/`, `tests/installed/`, `docs/` e bundle `decisions/`.[7]
-Esses caminhos são propostas para o novo repositório, ainda inexistentes, não arquivos descobertos neste estudo.
+Esses caminhos são propostas para o novo repositório, ainda inexistentes, não arquivos descobertos nesta definição.
 S1 fixa versão do host/Python e confirma essas fronteiras antes do primeiro RED; não há dependência adicional planejada além da biblioteca padrão/nativa.
 Comandos planejados de S1 e regressão de S2/S3, nunca executados aqui porque ainda não existe código do produto:
 

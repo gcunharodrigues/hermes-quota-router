@@ -42,7 +42,8 @@ class NormalizeTests(unittest.TestCase):
             "conflicting_windows": Snapshot("anthropic", "x", NOW, (Window("Current week", 10, NOW + timedelta(days=1)),
                                                                     Window("Current week", 30, NOW + timedelta(days=1)))),
             "malformed_snapshot": Snapshot("anthropic", "x", NOW, windows=7),
-            "malformed_window": Snapshot("anthropic", "x", NOW, (Window("Current week", 120, NOW + timedelta(days=1)),)),
+            # decisions/hqr-38-spec.md, A32: above 100% is clamped; a negative value is still malformed.
+            "malformed_window": Snapshot("anthropic", "x", NOW, (Window("Current week", -5, NOW + timedelta(days=1)),)),
             "reset_passed": Snapshot("anthropic", "x", NOW, (Window("Current week", 10, NOW),)),
             "no_week_window": Snapshot("anthropic", "x", NOW, (Window("Current session", 10, NOW + timedelta(hours=1)),)),
         }

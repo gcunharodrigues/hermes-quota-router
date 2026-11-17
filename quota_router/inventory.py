@@ -1,3 +1,4 @@
+# Implements decisions/hqr-20-amendment.md, sections 3/4 and D12/D13; decisions/s3-plan.md, "Cron".
 """Read-only inventory of the profile routes the Auto would change (HQR-20 amendment, sections 3 and 4).
 
 Reads the raw profile document with `hermes_cli.config_backend.read_config_doc` (open and parse only) and the cron jobs file directly.
@@ -34,6 +35,8 @@ def read_jobs_file(path):
     return data if isinstance(data, list) else None
 
 
+
+# decisions/hqr-20-amendment.md, AC-17: raw parsing avoids native bootstrap, backup and job-repair side effects.
 def native_sources():
     """(profile config, cron jobs) from the host, or None for each source outside a Hermes process."""
     try:
@@ -104,3 +107,95 @@ def read(config, jobs):
     cron["globals_writable"] = cron["jobs_state"] == "ok" and not cron["partial_pins"]
     return {"state": "ok", "conversation": conversation, "delegation_default": default, "routes": routes, "cron": cron,
             "not_governed": list(NOT_GOVERNED)}
+
+
+def _effort(value):
+    """Native parsing on Hermes; closed offline representation when the host is unavailable."""
+    try:
+        from hermes_constants import parse_reasoning_effort
+    except ImportError:
+        pass
+    else:
+        try:
+            return _closed_effort(parse_reasoning_effort(value))
+        except Exception:
+            return None
+    if value is False:
+        return 'none'
+    if isinstance(value, dict):
+        if value.get('enabled', True) is False:
+            return 'none'
+        value = value.get('effort')
+    if not isinstance(value, str):
+        return None
+    value = value.strip().lower()
+    if value in ('false', 'disabled'):
+        return 'none'
+    return value if value in EFFORTS else None
+
+
+def _closed_effort(parsed):
+    if not isinstance(parsed, dict):
+        return None
+    if parsed.get('enabled') is False:
+        return 'none'
+    effort = parsed.get('effort')
+    return effort if isinstance(effort, str) and effort in EFFORTS else None
+
+
+def _override_effort(model, overrides):
+    try:
+        from hermes_constants import resolve_per_model_reasoning_effort
+    except ImportError:
+        pass
+    else:
+        try:
+            return _closed_effort(resolve_per_model_reasoning_effort(model, overrides))
+        except Exception:
+            return None
+    # Offline inventory has no qualified Hermes resolver; this fallback is not Auto admission.
+    if not isinstance(model, str):
+        return None
+    exact = _effort(overrides.get(model))
+    if exact is not None:
+        return exact
+    canonical = model.rsplit('/', 1)[-1].replace('.', '-')
+    for key, raw in overrides.items():
+        if isinstance(key, str) and key.rsplit('/', 1)[-1].replace('.', '-') == canonical:
+            parsed = _effort(raw)
+            if parsed is not None:
+                return parsed
+    return None
+
+
+def cron_origins(config, jobs):
+    """Per-field cron inheritance, not a cron write group (D12, D13)."""
+    config = config if isinstance(config, dict) else {}
+    conversation = _get(config, "model")
+    cron, agent = _get(config, "cron"), _get(config, "agent")
+    overrides = _get(agent, "reasoning_overrides")
+
+    # decisions/hqr-20-amendment.md, D12/D13; decisions/s3-plan.md, "Cron": resolve model/provider independently.
+    def origin(job):
+        model = job.get("model") or cron.get("model") or conversation.get("default")
+        provider = job.get("provider") or cron.get("model_provider") or conversation.get("provider")
+        model_source = "job" if job.get("model") else "cron.model" if cron.get("model") else "conversation"
+        provider_source = "job" if job.get("provider") else "cron.model_provider" if cron.get("model_provider") else "conversation"
+        # decisions/s3-plan.md, N5: valid job effort wins, then the effective model override, then conversation effort.
+        pin = _effort(job.get("reasoning_effort"))
+        override = _override_effort(model, overrides)
+        effort, effort_source = (pin, "job") if pin is not None else (
+            (override, "agent.reasoning_overrides") if override is not None else
+            (_effort(agent.get("reasoning_effort")), "agent.reasoning_effort"))
+        return {"model": {"value": safe_model(model), "origin": model_source},
+                "provider": {"value": _clean(provider, PROVIDER), "origin": provider_source},
+                "effort": {"value": effort if isinstance(effort, str) and effort in EFFORTS else None, "origin": effort_source},
+                "partial": model_source != provider_source.replace("cron.model_provider", "cron.model")}
+
+    rows = []
+    for index, job in enumerate(jobs if isinstance(jobs, list) else [], 1):
+        if isinstance(job, dict):
+            rows.append(dict(origin(job), job=_clean(job.get("id"), JOB_ID) or f"job-{index}",
+                             pinned=any(job.get(k) for k in PIN_KEYS)))
+    return {"default": origin({}), "jobs": rows, "jobs_state": "ok" if isinstance(jobs, list) else "unavailable",
+            "consumers.cron": "sem efeito; cron segue a conversa nos campos sem padrão/pin; fixe provider, modelo e esforço no job"}

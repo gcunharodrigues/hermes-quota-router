@@ -75,7 +75,8 @@ class NoWriteTests(unittest.TestCase):
             ctx = Context()
             reader = reader_for(openai_codex=codex(100), anthropic=claude(10))
             with mock.patch.dict(sys.modules, host(home)):
-                m = Management(ctx, importer=lambda: reader, clock=lambda: NOW)
+                m = Management(ctx, importer=lambda: reader, clock=lambda: NOW, profile=lambda: 'default',
+                               compatible=lambda: {'ok': True, 'reasons': []})
                 results = [json.loads(m.command(c + " --json")) for c in
                            ("status", "explain", "config", "config set credits.anthropic off", "config approve-map base", "explain")]
             self.assertEqual(tree(home), before)

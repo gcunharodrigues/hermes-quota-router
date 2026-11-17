@@ -1,3 +1,4 @@
+# Implements AGENTS.md, "Texto e verificações"; README.md, HQR-08.
 """Repository gate library; exceptions name exact frozen public/data paths."""
 from pathlib import Path
 

@@ -2,7 +2,7 @@
 
 ## Resultado e limite
 
-A emenda do card `t_1c0d7681` admitiu provisionamento Docker, instalação GitHub do candidato e lifecycle somente no alvo de teste.
+A emenda da tarefa de teste admitiu provisionamento Docker, instalação GitHub do candidato e lifecycle somente no alvo de teste.
 A instalação desabilitada e a comparação externa dos bytes passaram.
 A habilitação nativa foi recusada pelo PM; não houve gestão OFF/Observe instalada, restart funcional, remoção, reinstalação ou rollback exercitados.
 S1 continua bloqueada, sem GO, aceite de DEMO ou avanço de S2.
@@ -16,7 +16,7 @@ O [registro corrente](../decisions/s1-delivery.md) conserva os resultados histó
 - Archive público do host: SHA-256 `2525046f165880c22f177f2214c8da3e26c58cb0aeab5bd09aad940556538897`; 24798 membros únicos, sem links, examinados antes da extração.
 - Base pública: `python@sha256:3fe1a0b6c2d6b2ebb572906cdabeca75aeb558c0c17db5ffefbcf8094871c32b`.
 - Imagem própria instalada: `sha256:885256829d31bea659e46fcde238b8960eaf78dd79e67b61276db3090c7b8a43`.
-- Container instalado `hqr-s1-test`: `5d3dc6d91d23f2fc43b607693b92a6c4fb00d620c7f2e717ff082e012c57862c`.
+- Container instalado `hqr-s1-test`: ID registrado no recibo privado.
 - Python executado: `3.14.10`, prefixo `/opt/hermes-venv`, fonte importada `/opt/hermes/hermes_cli/plugins.py`.
 - `pyproject.toml`: SHA-256 `ee825ad304ad685625c8878cd34b7923ec64579cdc08e646b84b76ba3d4c1cfc`.
 - `uv.lock`: SHA-256 `d0ae8bfd20db7a8ca0e75418df718315c58088b120366227cc62ee8fe25d4274`.
@@ -78,7 +78,7 @@ O PM tentou uma nova geração e buscou `certifi==2026.10.19` em `files.pythonho
 A mensagem nativa informa que config.yaml e ambiente ativo ficaram inalterados.
 Readback próprio confirmou seleção enabled/disabled ausente, deployment preservado e handler `None`.
 Não houve OFF/Observe ativo, AUTO salvo/habilitado, inferência, reparo do PM, conexão de rede ou nova tentativa após a negativa.
-O log integral `enable.txt`, com stack trace e caminho da geração recusada, foi preservado em `.runtime/s1-installed-run2/` da worktree do card.
+O resultado público desta tentativa é a negativa nativa resumida acima, sem stack trace nem caminhos operacionais.
 
 O fato de o venv explícito já importar o host não prova que o PM consiga admitir sua própria geração offline.
 Não se conclui uma causa-raiz apenas desse erro; layout/cache/seleção do PM precisam de disposição do coordenador antes da retomada.
@@ -94,7 +94,7 @@ Esses REDs provam a preparação/instalação requerida pelos testes, não imple
 Os testes de unidade/integração anteriores permanecem protegidos e separados dessas observações.
 O discovery instalado é `python3 -m unittest discover -s tests/installed -p 'test_*.py' -v`, com HQR_DOCKER_CLIENT explícito e HOME/TMPDIR/pycache externos.
 A suíte exige o alvo real admitido; não retorna skip/PASS por ausência do container.
-Os gerados, logs e hashes são preservados na worktree ignorada `.runtime/s1-installed-run2/`; não são anunciados como anexos ou fonte pública.
+Este documento resume os resultados medidos; registros brutos e arquivos gerados não integram a distribuição.
 Não remover os recursos novos antes de preservar e reconciliar as evidências do bloqueio.
 
 ## Run 3 — habilitação nativa offline (2026-11-15)
@@ -102,13 +102,13 @@ Não remover os recursos novos antes de preservar e reconciliar as evidências d
 Diagnóstico: a recipe aquecia `/opt/hqr-build-cache`, mas o PM do alvo usa o cache gravável `$HERMES_HOME/cache/uv` (`pm/packages.py:407-478`; `pm/environment.py:261-283`).
 Correção autorizada por Guilherme: somente o argumento `--cache` da recipe passou a `/home/hqr/state/cache/uv`; testes, host, candidato e PM não mudaram.
 A imagem `sha256:8a20fd5269398d4d97b546f63c351152fd82924637bb1bd61e8e75c9ee12e244` foi construída com downloads públicos apenas na preparação.
-O container do run 2 foi parado e preservado como `hqr-s1-test-run2`; o novo `hqr-s1-test` (`cf22fba55bb3e9714cce1b15c7263ae210b16e9e826d2044c236159d62b794bb`) nasceu com `--network none --cap-drop ALL --security-opt no-new-privileges=true`, usuário `10001:10001` e sem mounts.
+O container do run 2 foi parado e preservado como `hqr-s1-test-run2`; o novo `hqr-s1-test` nasceu com `--network none --cap-drop ALL --security-opt no-new-privileges=true`, usuário `10001:10001` e sem mounts.
 Antes da tentativa, uma sonda stdlib confirmou o cache gravável com o arquivo `certifi-2026.10.19`, e os dois testes instalados passaram com `Status: not enabled`.
 A única tentativa autorizada de `hermes plugins enable hermes-quota-router` terminou com exit `0` e `Plugin hermes-quota-router enabled`.
 Readback: `Status: enabled`, `plugins.enabled` contém o plugin, o consumidor nativo `get_plugin_command_handler('quota-router')` resolve para `hermes_plugins.hermes_quota_router.quota_router.lifecycle`, os 34 arquivos continuam idênticos ao candidato e a rede continua `none`.
 Correção posterior: esse sucesso não prova admissão offline estável; ver a seção do run 3b.
 Continuam sem prova: OFF/Observe ativos nos consumidores instalados, controles negativos completos neste container, restart, disable, remoção, reinstalação, rollback e HQR-17.
-Os recibos ficam em `.runtime/s1-installed-run3/`.
+Os resultados do run 3 estão resumidos nesta seção.
 
 ## Run 3 — ciclo de vida instalado (parcial)
 
@@ -138,7 +138,7 @@ Remoção, reinstalação, rollback, controles negativos no novo container e o e
 
 Guilherme autorizou trocar a asserção protegida de zero mounts por um único volume Docker da tarefa e criar um novo alvo com esse volume.
 O teste protegido `test_runtime.py` agora exige exatamente o volume `hqr-s1-state` (driver `local`, sem opções, label da tarefa) em `/home/hqr/state` e nenhum caminho do host; RED `b8c6c0b` falhou contra o container sem volume.
-O alvo anterior foi parado e preservado como `hqr-s1-test-run3a`; o novo `hqr-s1-test` (`7461376f6a3794b870995ffb963da87beb744ad7bce524df5be5b21fceb2f74a`) usa a mesma imagem, rede `none`, CapDrop ALL, no-new-privileges e usuário 10001.
+O alvo anterior foi parado e preservado como `hqr-s1-test-run3a`; o novo `hqr-s1-test` usa a mesma imagem, rede `none`, CapDrop ALL, no-new-privileges e usuário 10001.
 Os dois testes instalados passaram com o plugin instalado e desabilitado.
 
 A habilitação nativa neste alvo foi recusada com exit `1`: ao reconstruir `hermes-agent`, o PM precisou resolver `setuptools==84.1.0` e `wheel` do `build-system.requires` em `https://pypi.org/simple/setuptools/`, sem rede.
@@ -151,7 +151,7 @@ Portanto a habilitação offline continua sem prova estável, e o ciclo de vida 
 
 Guilherme decidiu que o alvo de teste pode ter saída para a internet, mantendo volume próprio, nenhum caminho do host e nenhuma credencial; a spec exige separação de dados, configuração, credenciais e sockets de produção, não um alvo sem rede.
 O teste protegido `test_runtime.py` passou a exigir rede `bridge` única, nenhuma porta publicada e somente o volume da tarefa `hqr-s1-state-net`; RED `63bfbed` falhou contra o alvo anterior.
-O alvo do run 3b foi parado e preservado como `hqr-s1-test-run3b`; o novo `hqr-s1-test` (`1a01c4e251ef382b55568982f2c31ed9d93c9ac64f7cc189f0412d490d2cf288`) usa a mesma imagem `sha256:8a20fd5269398d4d97b546f63c351152fd82924637bb1bd61e8e75c9ee12e244`.
+O alvo do run 3b foi parado e preservado como `hqr-s1-test-run3b`; o novo `hqr-s1-test` usa a mesma imagem `sha256:8a20fd5269398d4d97b546f63c351152fd82924637bb1bd61e8e75c9ee12e244`.
 Os dois testes instalados passaram com o plugin desabilitado, e a habilitação nativa passou com exit `0`.
 
 A primeira execução do harness parou no passo 11 por uma checagem estrita demais: a remoção nativa funcionou, mas o Hermes também retira o nome do plugin de `plugins.disabled` (`_forget_plugin_config`), o que o harness contava como alteração alheia.
@@ -180,7 +180,7 @@ Os 17 passos passaram:
 
 `a8ee907` é usado só como revisão anterior pública para exercitar a troca de código; ele não tem a serialização de comandos de `d7409c8` e não é candidato de produção.
 A rede do alvo alcança a internet e a rede local do host; os testes mostram que os serviços do host não respondem, mas não provam a ausência de outros serviços na rede local.
-Os recibos ficam em `.runtime/s1-installed-run4/`.
+Os resultados do run 4 estão resumidos nesta seção.
 
 ## Revisão crítica e run 5b (2026-11-15)
 

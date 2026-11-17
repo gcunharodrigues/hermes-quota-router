@@ -1,3 +1,4 @@
+# Implements decisions/product-spec.md, sections 7/9 and AC-11/14; decisions/s1-delivery.md, "Incremento implementado".
 """Read-only candidate checks; callers supply a trusted allowlist from a chosen Git tree.
 
 Run on a quiescent exported/installed tree, with caches outside it.
@@ -12,6 +13,7 @@ import stat
 FORBIDDEN_NAMES = {"auth.json", ".env"}
 
 
+# decisions/product-spec.md, AC-11/14: only an explicit, nonempty relative-path allowlist can define the published payload.
 def checked_paths(paths):
     paths = list(paths)
     if not paths or len(set(paths)) != len(paths):
@@ -27,6 +29,7 @@ def checked_paths(paths):
     return paths
 
 
+# decisions/product-spec.md, section 9/AC-14: reject symlinks and special entries rather than silently omitting them.
 def tree_files(root):
     root = Path(root).absolute()
     if any(p.is_symlink() for p in (root, *root.parents)) or not root.is_dir():

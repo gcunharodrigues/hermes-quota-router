@@ -26,7 +26,7 @@ A segunda rodada exigiu a admissão de rede antes das mutações; o run 6 passou
 As rodadas 1 e 2 usaram a rota `review` (`openai-codex`, `gpt-6.1-sol`, esforço xhigh).
 Na rodada 3, duas tentativas nessa rota falharam com HTTP 400 do provedor, sem parecer; com autorização de Guilherme, a rechecagem rodou uma vez em sessão one-shot nova no Claude (`anthropic`, `claude-opus-5-5`), sem mudar configuração.
 O workspace ficou idêntico antes e depois de cada rodada.
-Os pareceres e logs ficam em `.runtime/s1-review/`.
+Os resultados das revisões independentes estão resumidos nesta seção, sem registros brutos distribuídos.
 O run 6 executou a mesma versão de `tests/installed/lifecycle.py` depois commitada em `50e3135`; entre o run e o commit só mudaram documentos.
 
 Disposição dos achados:
@@ -38,8 +38,8 @@ Disposição dos achados:
 
 ### Aceite
 
-DEMO apresentada na conversa de Guilherme em 2026-11-15, com status, Observe, recusa de AUTO e OFF rodados ao vivo no alvo de teste (recibo privado `.runtime/s1-demo/demo.json`, fora do Git).
-Guilherme respondeu "Sim" à pergunta "Você aceita a S1 como demonstrada?" em 2026-11-15 11:31 -0300.
+DEMO apresentada em 2026-11-15, com status, Observe, recusa de AUTO e OFF rodados ao vivo no alvo de teste.
+Guilherme aceitou a S1 demonstrada em 2026-11-15.
 O aceite vale para o plugin `ad3e180f32adea3c25a2ef91280f1f6308729a47` no alvo de teste, com a evidência e a revisão registradas até `28115a957d77ea86b71bf44964127aed4e3472ec`.
 Ele não autoriza merge, push, release, instalação no Hermes de produção, uso de créditos nem o início da S2 sem a emenda de spec e plano de HQR-20.
 
@@ -52,18 +52,18 @@ Readback confirmou handler ausente e deployment preservado; OFF/Observe ativos, 
 S1 permanece bloqueada, sem GO, DEMO ou S2; default precisa dispor HQR-16/17 e a retomada precisa preservar os pins e a negativa.
 Os REDs novos `01abcad` e `ac28c6c` são de preparação/instalação, sem alteração do candidato instalado ou dos testes antigos.
 O repositório contém recipe e dois testes instalados adicionais; a revisão local futura não está publicada ou instalada como se fosse outro candidato.
-Os recibos do run 2 estão preservados em `.runtime/s1-installed-run2/` da worktree da tarefa, não em scratch como única cópia nem anunciados como anexos.
+Os resultados do run 2 estão resumidos neste registro; a distribuição não contém os registros brutos.
 
 ## Complemento de revisão independente — run 2
 
 Uma chamada com três perspectivas `review` examinou o delta instalado/documental até `7b9d2280737e127425e799c7c56ccff93b369241`; os três retornos foram `blocked`, sem GO.
-O executor reconferiu a guarda antes/depois idêntica `90ed1d6158a4b1a786550dd45d6dae100334eb91663ca43697da8eb923b82c7b` e todos os 50 hashes de evidência.
+O executor reconferiu a identidade do workspace antes e depois e os 50 artefatos de evidência daquela revisão.
 Os seis bloqueantes anteriores permanecem pelo mesmo ID, agora parcialmente supridos pela instalação desabilitada; não se repete a alegação antiga de ausência de alvo/instalação.
 Gestão instalada, controles negativos completos no novo container e lifecycle continuam abertos após a negativa nativa.
 Os quatro opcionais históricos permanecem HQR-12..15; `TE-S1-007`, novo opcional válido de inventário, ficou em HQR-18 sem editar o teste protegido.
 Os três revisores leram evidência; não executaram testes, Docker, scan, build ou instalação.
 Reviewer/test-engineer recalcularam os hashes dos artefatos; security-reviewer conferiu o pin do manifesto e explicitou que não recalculou todos os membros.
-O retorno nativo completo de `deleg_ef1155df` foi preservado da própria sessão, SHA-256 `8759490f9dc67c882282c8bb41173e5d228aa59b21d1e46b76c95f61e3bf344f`, com os três pareceres separados.
+A revisão independente desta rodada teve três pareceres separados, todos bloqueados pelos limites acima.
 A alteração documental posterior registra reconciliação/backlog somente, não representa nova execução/revisão de código nem resolve a negativa.
 
 ## Histórico preservado — run 1
@@ -127,7 +127,7 @@ Diagnósticos estáticos opcionais do editor sobre nullabilidade de `ModuleSpec`
 
 Uma única chamada crítica, com reviewer, security-reviewer e test-engineer na rota `review`, examinou base até `60c0ad23f0b329dd5334978d0c937911fd034bc4`.
 Os três retornos nativos completos são `blocked`; nenhum é GO.
-A guarda SHA-256 de status completo, HEAD e refs permaneceu idêntica antes/depois: `49cf89a00ea2ec54242c2208c2e2aedbceb90e6c789ced164954bd63ea301880`.
+A guarda de status completo, HEAD e refs permaneceu idêntica antes e depois da revisão.
 O executor reconferiu a guarda, não apenas adotou o relato dos revisores.
 Os revisores leram os logs do autor; não executaram testes, build, scan, instalação ou operações reais.
 Reviewer e test-engineer também conferiram por leitura/hashing os bytes do pacote e dos arquivos; security-reviewer não recalculou os hashes e explicitou esse limite.
@@ -141,7 +141,7 @@ Reviewer e test-engineer também conferiram por leitura/hashing os bytes do paco
 Nenhum revisor identificou defeito bloqueante adicional no código local; isso não aprova a fatia incompleta nem elimina as lacunas opcionais de regressão.
 Não houve correção de código ou teste após a revisão, nem nova rodada: o bloqueio operacional não pode ser resolvido sem admissão humana.
 A alteração posterior a esse commit registra somente esta reconciliação e o backlog; não é apresentada como nova revisão técnica ou aceite.
-Os pareceres nativos completos foram preservados no registro gerado da tarefa; os live transcripts são abreviados e não são apresentados como parecer integral.
+Este registro apresenta o resumo sanitizado da revisão independente e seus limites, não os registros brutos.
 
 ## Próximo gate
 

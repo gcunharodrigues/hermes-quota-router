@@ -1,3 +1,5 @@
+# Implements decisions/hqr-20-amendment.md, AC-16/22/23/24; decisions/s2-delivery.md, "Piloto no Hermes de trabalho (D1)"; README.md, HQR-35;
+# decisions/hqr-38-spec.md, D-28 to D-31: provider states and the native safety net in plain Portuguese.
 """Human-readable chat output for /quota-router (Portuguese); raw JSON stays available with `--json`.
 
 Order follows the owner-brief rules: conclusion first, then the numbers behind it, then what needs attention,
@@ -16,6 +18,11 @@ READING_REASONS = {
     "no_snapshot": "sem dados do provedor (sem login, ou o provedor não respondeu)",
     "reader_unavailable": "o leitor de cotas do Hermes não está disponível",
     "reader_error": "a consulta ao provedor falhou",
+    # README.md, HQR-35: a known transport failure is not an exhausted quota window.
+    "http_429": "o provedor limitou consultas (HTTP 429)",
+    "http_401": "login recusado (HTTP 401)",
+    "timeout": "a consulta demorou demais",
+    "network_error": "falha de rede",
     "provider_unavailable": "o provedor informou que a leitura está indisponível",
     "provider_mismatch": "a leitura veio de outro provedor",
     "invalid_timestamp": "a leitura veio sem horário confiável",
@@ -28,14 +35,22 @@ READING_REASONS = {
     "malformed_window": "a leitura veio com números inválidos",
     "malformed_snapshot": "a leitura veio em formato inesperado",
     "no_week_window": "a leitura não trouxe a cota semanal",
-    "window_duration_unqualified": "o Codex não confirmou a duração das janelas",
+    "window_duration_unqualified": "o Codex não confirmou a duração das janelas; o formato precisa ser requalificado",
+    # decisions/hqr-38-spec.md, A26/A34: unsupported plan types and new formats fail closed with their own words.
+    "monthly_plan_unsupported": "plano com franquia mensal (como o ChatGPT Go), que o plugin não suporta",
+    "format_requalification_required": "o Codex publicou um formato novo de franquia; o plugin precisa ser requalificado",
 }
+
+# decisions/hqr-38-spec.md, "Regras de decisão": the four quota states.
+STATE_NAMES = {"free": "Livre", "pressured": "Pressionado", "exhausted": "Esgotado", "unknown": "Desconhecido"}
 
 BLOCKS = {
     "week": "a franquia semanal acabou",
     "session": "a janela de 5 h está no limite",
     "inconsistent_window": "as datas da leitura não fecham",
     "upstream_denied_contradiction": "o provedor nega o uso mas mostra franquia livre",
+    "credits_only_plan": "o plano só tem créditos, sem franquia",
+    "model_window_unqualified": "a cota própria deste modelo veio em formato não qualificado",
     "no_week_window": "a leitura não trouxe a cota semanal",
     "model_not_eligible:fable": "o modelo Fable não pode ser verificado",
     "model_not_eligible:astra": "o modelo Astra não pode ser verificado",
@@ -61,6 +76,10 @@ DECISION_REASONS = {
     "credits_after_subscriptions": "nenhuma franquia serve; usa créditos permitidos",
     "no_eligible_candidate": "nenhum provedor pode ser usado agora",
     "only_subscription": "é o único com franquia livre; créditos só entram quando nenhuma franquia serve",
+    # decisions/hqr-38-spec.md, D-31: with every 5 h window pressed, weekly slack decides, still within the subscription.
+    "pressured_best_pacing": "as duas janelas de 5 h passaram de {p}%; vale a maior folga semanal, ainda pela franquia",
+    "pressured_previous_preference_kept": "as duas janelas de 5 h passaram de {p}%; mantém a escolha anterior, pois o outro não superou o limite de troca de {h}%",
+    "pressured_challenger_above_hysteresis": "as duas janelas de 5 h passaram de {p}%; o outro passou a ter mais de {h}% de vantagem semanal",
 }
 
 MAP_NOTES = {
@@ -72,7 +91,7 @@ MAP_NOTES = {
 SETTINGS_TEXT = {
     "consumers.conversation": ("O que recomendar", "recomendar o modelo da conversa principal (vale em sessões novas)"),
     "consumers.subagents": ("O que recomendar", "recomendar o modelo de cada rota de subagente"),
-    "consumers.cron": ("O que recomendar", "recomendar o modelo dos jobs agendados"),
+    "consumers.cron": ("O que recomendar", "sem efeito; cron segue a conversa nos campos sem padrão ou pin próprio (D12)"),
     "conversation.policy": ("Conversa", "como escolher na conversa: principal_first fica no principal enquanto ele tiver franquia; pacing usa quem tiver mais folga"),
     "principal": ("Geral", "provedor preferido na conversa e no desempate"),
     "credits.openai-codex": ("Créditos", "usar créditos do Codex quando nenhuma franquia servir"),
@@ -88,7 +107,7 @@ SETTINGS_TEXT = {
 }
 
 ERRORS = (
-    (r"^AUTO unavailable", "O modo AUTO ainda não existe: nesta versão o plugin só observa e recomenda. Nada foi gravado."),
+    (r"^AUTO unavailable", "O modo AUTO ainda não existe nesta instância efetiva: falta mapa aprovado ou qualificação compatível; confira o status."),
     (r"^Usage:", "Comando não reconhecido."),
     (r"^Use /quota-router mode", "Para mudar o modo, use `/quota-router mode off` ou `/quota-router mode observe`."),
     (r"^Invalid value for ([\w.-]+)", r"Valor inválido para `\1`. Nada foi gravado."),
@@ -139,7 +158,8 @@ FAMILIES = {"opus": "Opus", "sonnet": "Sonnet"}
 
 
 def reason_text(reason, settings):
-    return DECISION_REASONS.get(reason, "motivo não informado").format(h=settings.get("limits.hysteresis_pct", 10))
+    return DECISION_REASONS.get(reason, "motivo não informado").format(h=settings.get("limits.hysteresis_pct", 10),
+                                                                       p=settings.get("limits.session_block_pct", 95))
 
 
 def limit_of(window, settings):
@@ -156,7 +176,9 @@ def over(window, settings):
 
 SOURCES = {"usage_api": "API de uso do Codex", "oauth_usage_api": "API de uso da Anthropic"}
 QUOTA_SOURCES = {"native_account_usage": "leitor de cotas do Hermes", "injected_reader": "leitor de teste (não é leitura real)"}
-UNUSABLE = ("inconsistent_window", "upstream_denied_contradiction", "no_week_window")
+UNUSABLE = ("upstream_denied_contradiction", "no_week_window")
+# decisions/hqr-38-spec.md, A23: an inconsistent window blocks the subscription, never verified credits by itself.
+SUBSCRIPTION_UNUSABLE = ("inconsistent_window",)
 
 
 def block_text(blocked, settings, window=None):
@@ -168,7 +190,7 @@ def block_text(blocked, settings, window=None):
     if blocked == "session":
         return f"a janela de 5 h passou do limite configurado de {settings['limits.session_block_pct']}%"
     if blocked.startswith("unknown:"):
-        return READING_REASONS.get(blocked.split(":", 1)[1], "leitura indisponível")
+        return reading_reason(blocked.split(":", 1)[1], "leitura indisponível")
     return BLOCKS.get(blocked, "fora da franquia")
 
 
@@ -180,6 +202,7 @@ def window_name(window):
     return "semana"
 
 
+# decisions/hqr-20-amendment.md, section 14/AC-24: rendered credit availability must agree with the policy verdict.
 def credit_text(provider, reading, settings):
     """Mirror of policy._credits: balance, limits and permission, in that order."""
     allowed = settings.get(f"credits.{provider}")
@@ -202,12 +225,34 @@ ANTHROPIC_LIMIT = ("uma causa possível é o limite de consultas da API de uso d
                    "\"tente em 300 s\" depois de poucas consultas seguidas; o Hermes também a consulta a cada turno")
 
 
+# README.md, HQR-35: generic HTTP diagnostics contain only a validated numeric status, never a native message.
+def reading_reason(reason, fallback="leitura não confiável"):
+    if reason in READING_REASONS:
+        return READING_REASONS[reason]
+    if isinstance(reason, str) and re.fullmatch(r"http_[1-5][0-9]{2}", reason):
+        return f"a consulta falhou (HTTP {reason[5:]})"
+    return fallback
+
+
 def unknown_text(provider, reading, settings):
     reason = reading.get("reason")
     if reason in ("no_snapshot", "reader_error"):
         text = "o provedor não respondeu, ou não há login"
-        return f"{text}; {ANTHROPIC_LIMIT}" if provider == "anthropic" else text
-    return READING_REASONS.get(reason, "leitura não confiável")
+        text = f"{text}; {ANTHROPIC_LIMIT}" if provider == "anthropic" else text
+    elif reason == "http_429":
+        name = "a Anthropic" if provider == "anthropic" else "o Codex"
+        text = f"{name} limitou consultas (HTTP 429)"
+    else:
+        text = reading_reason(reason)
+    # README.md, HQR-35: retry_at is UTC in JSON and displayed in the same local timezone as quota resets.
+    if reading.get("retry_at"):
+        try:
+            retry = datetime.fromisoformat(reading["retry_at"]).astimezone()
+        except (TypeError, ValueError):
+            pass
+        else:
+            text += f"; nova tentativa às {retry:%H:%M}"
+    return text
 
 
 def account_block(reading, settings, decided_at):
@@ -216,7 +261,7 @@ def account_block(reading, settings, decided_at):
         verdict = eligibility(reading, settings, datetime.fromisoformat(decided_at))
     except (TypeError, ValueError, KeyError):
         return None
-    return verdict["blocked_by"] if verdict.get("blocked_by") in UNUSABLE else None
+    return verdict["blocked_by"] if verdict.get("blocked_by") in UNUSABLE + SUBSCRIPTION_UNUSABLE else None
 
 
 def provider_line(provider, reading, settings, decided_at=None):
@@ -228,12 +273,18 @@ def provider_line(provider, reading, settings, decided_at=None):
     for window in sorted(reading["windows"], key=lambda w: order[w["kind"]]):
         state = over(window, settings)
         tail = f" ({state})" if state else ""
-        parts.append(f"{window_name(window)} {pct(window['used_pct'])} usada{tail}, renova {when(window['reset_at'])}")
+        # decisions/hqr-38-spec.md, A22: an idle window has no reset yet.
+        renew = f"renova {when(window['reset_at'])}" if window.get("reset_at") else "ainda não iniciada"
+        parts.append(f"{window_name(window)} {pct(window['used_pct'])} usada{tail}, {renew}")
+    if reading.get("credits_only"):
+        parts.append("plano só de créditos, sem franquia")
     kinds = {w["kind"] for w in reading["windows"]}
     if provider == "anthropic" and "week" in kinds and not kinds & {"session", "model_week"}:
         parts.append("a Anthropic não informa janela de 5 h nem cota própria do Opus, que usa esta cota semanal")
     unusable = account_block(reading, settings, decided_at)
-    if unusable:
+    if unusable in SUBSCRIPTION_UNUSABLE:
+        credit = f"Leitura não confiável ({BLOCKS[unusable]}): a franquia não será usada. {first_upper(credit_text(provider, reading, settings))}"
+    elif unusable:
         credit = f"Leitura não confiável ({BLOCKS[unusable]}): nem a franquia nem os créditos serão usados"
     else:
         credit = first_upper(credit_text(provider, reading, settings))
@@ -247,14 +298,15 @@ def consumers(decisions):
     """(label, decision) pairs in reading order."""
     items = [("a conversa", decisions["conversation"])]
     items += [(f"a rota {name}", d) for name, d in sorted(decisions.get("routes", {}).items())]
-    items.append(("o cron", decisions["cron"]))
+    if decisions["cron"].get("state") != "follows_conversation":
+        items.append(("o cron", decisions["cron"]))
     return items
 
 
 def recommendation(decisions, providers, settings, decided_at=None):
     groups = {}
     for label, decision in consumers(decisions):
-        if decision.get("state") in ("disabled_by_setting", "blocked_partial_pins", "jobs_unavailable"):
+        if decision.get("state") in ("disabled_by_setting", "blocked_partial_pins", "jobs_unavailable", "group_blocked", "backend_unavailable", "catalog_model_absent"):
             continue
         groups.setdefault((decision.get("choice"), decision.get("tier")), []).append(label)
     lines = []
@@ -305,6 +357,13 @@ def describe_scope(labels, routes):
     return parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " e " + parts[-1]
 
 
+def change_text(change):
+    text = f"{route(change['from'])} → {route(change['to'])}"
+    if change.get('fields'):
+        text += '; sincroniza ' + ', '.join(change['fields'])
+    return text
+
+
 def changes(decisions, approved_only):
     """Grouped changes for approved (`would_change`) or proposed (`proposal_change`) targets only."""
     grouped, conversation, cron = {}, None, None
@@ -312,13 +371,13 @@ def changes(decisions, approved_only):
         change = decision.get("would_change") if approved_only else decision.get("proposal_change")
         if not change:
             continue
-        text = f"{route(change['from'])} → {route(change['to'])}"
+        text = change_text(change)
         if label == "a conversa":
             conversation = text
         elif label == "o cron":
             cron = text
         else:
-            same = change["from"].get("effort") == change["to"].get("effort")
+            same = change["from"].get("effort") == change["to"].get("effort") and not change.get("fields")
             key = (change["from"].get("model"), change["to"].get("model"), same)
             grouped.setdefault(key, []).append((label[len("a rota "):], change))
     lines = []
@@ -329,14 +388,54 @@ def changes(decisions, approved_only):
         if same:
             lines.append(f"• {old} → {new}, mesmo esforço: {names}")
         else:
-            lines.extend(f"• {name}: {route(c['from'])} → {route(c['to'])}" for name, c in items)
+            lines.extend(f"• {name}: {change_text(c)}" for name, c in items)
     if cron:
         lines.append(f"• Cron: {cron}")
     return lines
 
 
-def attention(status):
+def catalog_attention(decisions):
+    lines, unknown = [], []
+    for label, decision in consumers(decisions) if "conversation" in decisions else []:
+        if decision.get("catalog_unverified"):
+            unknown.append(label)
+        if decision.get("catalog_missing"):
+            providers = ", ".join(NAMES[p] for p in decision["catalog_missing"])
+            lines.append(f"• {first_upper(label)} sem rota: ID ausente do catálogo models.dev ({providers}).")
+    if unknown:
+        scope = describe_scope(unknown, len(decisions.get("routes", {})))
+        lines.append(f"• IDs não verificados para {scope}: catálogo models.dev indisponível ou vazio; não bloqueia a decisão.")
+    return lines
+
+
+# D18/AC-17: excluded groups are a routing conclusion, never an actionable recommendation.
+def routing_attention(status):
+    labels = {'map_not_approved': 'papel sem mapa aprovado', 'advanced_delegation_unavailable': 'backend de subagentes indisponível',
+              'invalid_settings': 'configurações inválidas', 'profile_not_enrolled_for_auto': 'profile não inscrito',
+              'model_absent_from_catalog': 'modelo ausente do catálogo', 'disabled_by_setting': 'consumidor desligado',
+              'no_eligible_candidate': 'nenhum candidato elegível'}
     lines = []
+    for role, block in (status.get('routing_blocks') or {}).items():
+        fields = block.get('fields') or []
+        reasons = [labels.get(reason, 'qualificação nativa indisponível') for reason in block.get('reasons', [])]
+        detail = ('campos: ' + ', '.join(fields)) if fields else '; '.join(dict.fromkeys(reasons))
+        lines.append(f"• {group_label(role)} fora do Auto; {detail}; sem nova escrita automática para este grupo.")
+    return lines
+
+
+def attention(status):
+    lines = routing_attention(status) + catalog_attention(status.get("decisions") or {})
+    absence = status.get("applied", {}).get("absence")
+    if absence:
+        lines.append(f"• Auto declarado; plugin ausente ou sem ciclo de {absence['from']} a {absence['to']}; última decisão retida.")
+    applied = status.get('applied') or {}
+    for role, fields in (applied.get("groups_out") or {}).items():
+        if role in (status.get('routing_blocks') or {}):
+            continue
+        if applied.get('auto_declared') is False and status.get('mode_effective') == 'observe':
+            lines.append(f"• Exclusão anterior de {group_label(role)}; campos: {', '.join(fields)}; o próximo Auto avalia uma nova inscrição.")
+        else:
+            lines.append(f"• {group_label(role)} fora do Auto; campos: {', '.join(fields)}; não foi sobrescrito nem restaurado.")
     for key, item in (status.get("settings_invalid") or {}).items():
         lines.append(f"• A configuração `{key}` tem um valor inválido; o plugin usa o padrão até você corrigir com `/quota-router config reset {key}`.")
     decisions = status.get("decisions") or {}
@@ -365,7 +464,107 @@ def attention(status):
     return lines
 
 
+def group_label(role):
+    """Plain name of an enrolled group; safety net groups never show their internal name."""
+    from .groups import is_fallback, owner
+    if is_fallback(role):
+        return "rede de segurança da conversa" if owner(role) == "conversation" else f"rede de segurança de {owner(role)}"
+    return role
+
+
+def state_line(status):
+    """decisions/hqr-38-spec.md, "Regras de decisão": one state per provider, at account level."""
+    states = (status.get("quota") or {}).get("states") or {}
+    if not states:
+        return []
+    return ["Estado da franquia: " + "; ".join(f"{NAMES[p]}: {STATE_NAMES.get(s, 'Desconhecido')}" for p, s in states.items()) + "."]
+
+
+NET_EXCLUDED = {"exhausted_without_credits": "o {name} está esgotado e o uso de créditos dele não está permitido ou não é verificável",
+                "unknown": "a leitura do {name} não é confiável", "model_not_eligible": "o modelo do {name} não pode ser verificado"}
+
+
+# decisions/hqr-38-spec.md, D-28/D-29: the chain the native fallback uses for pinned chats, CLI and calls in flight.
+def safety_net_lines(decisions, auto):
+    grouped = {}
+    for label, decision in consumers(decisions):
+        net = decision.get("safety_net")
+        if label == "o cron" or net is None or net.get('state') == 'group_blocked' or not decision.get("choice"):
+            continue
+        key = (decision["choice"], tuple((e["provider"], e["model"]) for e in net.get("chain") or []),
+               tuple(sorted((net.get("excluded") or {}).items())))
+        grouped.setdefault(key, []).append(label)
+    if not grouped:
+        return []
+    routes = len(decisions.get("routes", {}))
+    head = "o plugin grava" if auto else "em Auto, o plugin gravaria"
+    lines = ["", f"**Rede de segurança** — {head} `fallback_providers`; o Hermes troca ao receber erro de cota e volta depois da espera",
+             "A cadeia é compartilhada com chats fixados; o Hermes ignora o primário efetivo do consumidor."]
+    for (choice, chain, excluded), labels in grouped.items():
+        who = first_upper(describe_scope(labels, routes))
+        peers = [(p, model) for p, model in chain if p != choice]
+        if peers:
+            peers = ", depois ".join(f"{NAMES[p]} {model}" for p, model in peers)
+            lines.append(f"• {who}: se {NAMES[choice]} recusar por cota, o Hermes tenta {peers}.")
+        else:
+            why = "; ".join(NET_EXCLUDED.get(reason, "o outro provedor não pode ser usado").format(name=NAMES[p]) for p, reason in excluded)
+            lines.append(f"• {who}: sem rede de segurança para o primário do Auto ({why or 'nenhum outro provedor'}).")
+        if chain:
+            available = ", depois ".join(f"{NAMES[p]} {model}" for p, model in chain)
+            lines.append(f"  Cadeia compartilhada para um primário fixado diferente: {available}; o backend corrente é ignorado.")
+    return lines
+
+
+def auto_text(status):
+    applied = status.get('applied') or {}
+    latest = applied.get('last_applied')
+    lines = ['**Quota Router · Auto** — melhor esforço para próximas tarefas']
+    if latest:
+        age = applied.get('age_s')
+        lines.append(f"Última decisão aplicada: geração {applied.get('generation')}, há {int(age)} s.")
+    else:
+        lines.append('Nenhuma decisão aplicada; a configuração anterior continua instalada.')
+    for role, entry in (applied.get('groups') or {}).items():
+        values = entry['values']
+        provider_key, model_key, effort_key = ('model.provider', 'model.default', 'agent.reasoning_effort') if role == 'conversation' else ('provider', 'model', 'reasoning_effort')
+        provider = values.get(provider_key, {}).get('value')
+        model = values.get(model_key, {}).get('value')
+        effort = values.get(effort_key, {}).get('value')
+        qualifier = 'aplicado' if entry.get('generation') is not None and entry.get('active') else 'retido; fora do Auto ou restaurado'
+        lines.append(f"• {role}: {NAMES.get(provider, 'herdado')} · {model or 'herdado'} · {effort or 'herdado'} ({qualifier}).")
+    if status.get('auto_suspended'):
+        lines.append('**Auto suspenso; novas escritas bloqueadas:** ' + ', '.join(status['auto_suspended']))
+    for role, fields in (applied.get('groups_out') or {}).items():
+        lines.append(f"• {group_label(role)} fora do Auto: {', '.join(fields)}; nenhum valor privado é exibido.")
+    absence = applied.get('absence')
+    if absence:
+        lines.append(f"Auto declarado; plugin ausente ou sem ciclo de {absence['from']} a {absence['to']}.")
+    lines += routing_attention(status)
+    decisions = status.get('decisions') or {}
+    if 'conversation' in decisions:
+        lines += ['', '**Decisão para as próximas tarefas**']
+        lines += recommendation(decisions, status['quota']['providers'], status['settings'], status.get('decided_at'))
+        lines += catalog_attention(decisions)
+        lines += safety_net_lines(decisions, True)
+    if status.get('quota', {}).get('providers'):
+        lines += ['', '**Cotas agora**'] + state_line(status)
+        lines += [provider_line(p, r, status['settings'], status.get('decided_at')) for p, r in status['quota']['providers'].items()]
+    origins = status.get('cron_origins')
+    if origins:
+        lines += ['', '**Cron — origem por campo**', origins['consumers.cron']]
+        for label, row in [('padrão', origins['default'])] + [(r['job'], r) for r in origins['jobs']]:
+            fields = '; '.join(f"{k}: {row[k]['value'] or 'não informado'} ({row[k]['origin']})" for k in ('model', 'provider', 'effort'))
+            lines.append(f"• {label}{' · parcial' if row['partial'] else ''}: {fields}")
+    lines += ['', 'Fora da cobertura: sessões gerenciadas antigas, pins, auxiliares e retries; chats fixados, CLI e chamadas em andamento dependem da rede de segurança nativa.',
+              'Fonte de sessão não qualificada: geração indeterminada, sem idade por tarefa.',
+              applied.get('limit', 'O plugin não veta chamadas nem limita gastos.'),
+              'OFF restaura apenas os grupos intactos; dados brutos: acrescente `--json`.']
+    return '\n'.join(lines)
+
+
 def status_text(status):
+    if status.get('mode_effective') == 'auto':
+        return auto_text(status)
     stamp = when(status.get("decided_at")) if status.get("decided_at") else None
     mode = status.get("mode_effective")
     if mode != "observe":
@@ -383,7 +582,7 @@ def status_text(status):
     if status.get("decision_incomplete"):
         lines.append("**Decisão incompleta:** falta alguma leitura ou há configuração inválida; veja os detalhes abaixo antes de usar.")
     origin = QUOTA_SOURCES.get(status["quota"].get("source"), "fonte não identificada")
-    lines += ["", f"**Cotas agora** (via {origin})"]
+    lines += ["", f"**Cotas agora** (via {origin})"] + state_line(status)
     lines += [provider_line(p, r, settings, status.get("decided_at")) for p, r in providers.items()]
     if "conversation" in decisions:
         approved_lines, proposed_lines = changes(decisions, True), changes(decisions, False)
@@ -392,6 +591,7 @@ def status_text(status):
         if proposed_lines:
             note = "proposta para os papéis ainda sem mapa aprovado" if settings["roles"] else "proposta; o mapa de modelos ainda não foi aprovado"
             lines += ["", f"**O que mudaria** ({note})"] + proposed_lines
+        lines += safety_net_lines(decisions, False)
         notes = [MAP_NOTES[n] for n in decisions.get("map_notes") or [] if n in MAP_NOTES]
         if notes:
             lines += [""] + notes
@@ -403,13 +603,19 @@ def status_text(status):
         steps.append(f"• Aprovar o mapa proposto: `/quota-router config approve-map {decisions.get('variant', 'base')}`")
     steps += ["• Entender cada decisão: `/quota-router explain`", "• Ver e mudar preferências: `/quota-router config`"]
     lines += ["", "**Próximos passos**"] + steps
-    lines += ["", "Fora do alcance: chamadas auxiliares, retries, fallbacks, chamadas em andamento e sessões gerenciadas abertas "
-              "antes da decisão. Dados brutos: acrescente `--json` ao comando."]
+    lines += ["", "Fora do alcance: chamadas auxiliares, retries e sessões gerenciadas abertas antes da decisão; chats fixados, CLI e "
+              "chamadas em andamento dependem da rede de segurança nativa. Dados brutos: acrescente `--json` ao comando."]
     return "\n".join(lines)
 
 
 def eligibility_line(provider, item, settings):
     name = NAMES[provider]
+    if item.get("pressured"):
+        # decisions/hqr-38-spec.md, D-31: pressed, still a subscription candidate when nobody is free.
+        score = item.get("score")
+        slack = f"; folga {score:.2f}".replace(".", ",") if score is not None else ""
+        return (f"• **{name}**: Pressionado — a janela de 5 h passou de {settings['limits.session_block_pct']}%; "
+                f"só entra se nenhum outro provedor estiver Livre{slack}")
     if item.get("subscription"):
         score = item.get("score")
         if score is None:
@@ -420,7 +626,8 @@ def eligibility_line(provider, item, settings):
     reason = block_text(item.get("blocked_by") or "", settings, item.get("blocked_window"))
     credit = CREDITS.get(item.get("credits_reason"), "")
     tail = f"; {credit}" if credit and item.get("credits_reason") != "model_not_eligible" else ""
-    return f"• **{name}**: {reason}{tail}"
+    state = STATE_NAMES.get(item.get("state"))
+    return f"• **{name}**: {state + ' — ' if state else ''}{reason}{tail}"
 
 
 VARIANT_NAMES = {"base": "base", "fable": "com Fable", "astra": "com Astra", "fable+astra": "com Fable e Astra"}
@@ -433,8 +640,12 @@ def pair_text(pair):
 def variant_lines(proposal):
     variants = proposal.get("variants") or {}
     base = variants.get("base") or {}
-    lines = [f"**Mapa base** (em uso: {VARIANT_NAMES.get(proposal.get('effective_variant') or '', '?')})"]
-    lines += [f"• {role}: {pair_text(pair)}" for role, pair in base.items()]
+    approved = proposal.get('status') == 'approved'
+    title = '**Mapa base** (aprovado em uso)' if proposal.get('label') == 'base' else '**Mapa aprovado em uso**'
+    lines = [title if approved else f"**Mapa base** (proposta: {VARIANT_NAMES.get(proposal.get('effective_variant') or '', '?')})"]
+    lines += [f"• {role}: {pair_text(pair)}" for role, pair in base.items() if role != 'cron']
+    if approved:
+        return lines + ['Cron segue a conversa nos campos sem padrão ou pin próprio (D12).']
     for name in ("fable", "astra", "fable+astra"):
         if name not in variants:
             continue
@@ -458,16 +669,20 @@ def variant_lines(proposal):
 def explain_text(status):
     decisions = status.get("decisions") or {}
     if status.get("mode_effective") != "observe" or "conversation" not in decisions:
-        return status_text(status)
+        text = status_text(status)
+        if (status.get('map') or {}).get('variants'):
+            text += '\n\n' + '\n'.join(variant_lines(status['map']))
+        return text
     settings = status["settings"]
     items = [(label, d) for label, d in consumers(decisions)
-             if d.get("state") not in ("disabled_by_setting", "blocked_partial_pins", "jobs_unavailable")]
+             if d.get("state") not in ("disabled_by_setting", "blocked_partial_pins", "jobs_unavailable", "group_blocked", "backend_unavailable", "catalog_model_absent")]
     lines = [f"**Quota Router · por que cada recomendação** — {when(status.get('decided_at'))}"]
     extra = attention(status)
     if status.get("decision_incomplete") or extra:
         lines += ["", "**Atenção**"]
         if status.get("decision_incomplete"):
-            lines.append("• Decisão incompleta: falta alguma leitura ou há configuração inválida; a explicação usa os padrões.")
+            # HQR-34: quota gaps are not settings fallbacks; attention() names invalid fields and their defaults separately.
+            lines.append("• Decisão incompleta: faltam leituras confiáveis ou há restrições; veja os detalhes abaixo.")
         lines += extra
     situations = {}
     for label, decision in items:
@@ -497,7 +712,7 @@ def explain_text(status):
             change = decision.get("would_change") if approved_only else decision.get("proposal_change")
             if change:
                 name = label.replace("a rota ", "").replace("a conversa", "Conversa (padrão do profile, sessões novas)").replace("o cron", "Cron")
-                rows.append(f"• {name}: {route(change['from'])} → {route(change['to'])}")
+                rows.append(f"• {name}: {change_text(change)}")
         if rows:
             lines += ["", f"**{title}**"] + rows
     lines += ["", f"Folga = parte livre da cota semanal ÷ parte da semana que falta até a renovação. "
@@ -536,7 +751,7 @@ def config_text(payload):
     return "\n".join(lines)
 
 
-def render(command, payload):
+def _render(command, payload):
     """Chat text for one command result."""
     if payload.get("error"):
         head = f"**Não foi possível:** {error_text(payload['error'])}"
@@ -547,5 +762,19 @@ def render(command, payload):
     if command == "explain":
         return explain_text(payload)
     if command == "mode":
-        return f"Modo alterado para **{'Observe' if payload.get('mode_effective') == 'observe' else 'OFF'}**.\n\n" + status_text(payload)
+        return f"Modo alterado para **{ {'observe': 'Observe', 'auto': 'Auto'}.get(payload.get('mode_effective'), 'OFF') }**.\n\n" + status_text(payload)
     return status_text(payload)
+
+
+def render(command, payload):
+    """Keep dependency diagnostics visible in text, including a dependency-only status payload."""
+    unavailable = (payload.get('subagents') or {}).get('ok') is False and command != 'config'
+    text = _render(command, payload) if not unavailable or 'settings' in payload else ''
+    # README.md, HQR-26: expose revisionless qualification without claiming the declared revision was measured.
+    revision_note = (payload.get('compatibility') or {}).get('revision_note') if command != 'config' else None
+    if revision_note:
+        text += ('\n\n' if text else '') + revision_note
+    if unavailable:
+        warning = 'Rotas de subagente indisponíveis: advanced-delegation 1.1.0 precisa estar carregado e habilitado com model_map; Auto não grava essas rotas.'
+        return text + ('\n\n' if text else '') + warning
+    return text

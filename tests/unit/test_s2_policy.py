@@ -96,7 +96,8 @@ class PolicyBoundaryTests(unittest.TestCase):
         r = {"openai-codex": normalize("openai-codex", far, NOW, 60), "anthropic": normalize("anthropic", claude(100), NOW, 60)}
         decision = decide("general", r, settings(), NOW)
         self.assertIsNone(decision["choice"])
-        self.assertEqual(decision["eligibility"]["openai-codex"]["credits_reason"], "reading_inconsistent")
+        # decisions/hqr-38-spec.md, A23: inconsistency no longer blocks credits by itself; these credits fail on unverifiable limits.
+        self.assertEqual(decision["eligibility"]["openai-codex"]["credits_reason"], "credits_limits_not_verifiable")
 
     def test_fractional_thresholds_and_strict_hysteresis_keep_full_precision(self):
         below = eligibility(normalize("anthropic", claude(10, session_used=94.99999), NOW, 60), settings(), NOW)
@@ -119,8 +120,9 @@ class PolicyBoundaryTests(unittest.TestCase):
                        raw={"credits": CREDITS_OK, "spend_control": {"reached": False}, "rate_limit": codex_rate_limit(WEEK)})
         decision = decide("general", {"openai-codex": normalize("openai-codex", far, NOW, 60),
                                       "anthropic": normalize("anthropic", claude(100), NOW, 60)}, settings(), NOW)
-        self.assertIsNone(decision["choice"])
-        self.assertEqual(decision["eligibility"]["openai-codex"]["credits_reason"], "reading_inconsistent")
+        # decisions/hqr-38-spec.md, A23: verified, allowed credits remain usable; the window stays unusable.
+        self.assertEqual((decision["choice"], decision["tier"]), ("openai-codex", "credits"))
+        self.assertEqual(decision["eligibility"]["openai-codex"]["blocked_by"], "inconsistent_window")
         long_session = Snapshot("openai-codex", "usage_api", NOW, (Window("Session", 10, NOW + timedelta(hours=6)),
                                                                    Window("Weekly", 10, NOW + timedelta(days=3))),
                                 raw={"rate_limit": codex_rate_limit(18000, WEEK)})

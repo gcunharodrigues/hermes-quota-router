@@ -31,5 +31,17 @@ class PublishedHeadTests(unittest.TestCase):
                 s2_pilot.branch_arg(bad)
 
 
+class PilotHomeTests(unittest.TestCase):
+    def test_checks_and_cli_share_hermes_home(self):
+        import importlib
+        import os
+        from unittest import mock
+        with mock.patch.dict(os.environ, {"HERMES_HOME": "/srv/other-home"}):
+            module = importlib.reload(s2_pilot)
+            self.assertEqual(module.HOME, Path("/srv/other-home"))
+            self.assertNotIn("HQR_PILOT_HERMES_HOME", Path(module.__file__).read_text())
+        importlib.reload(s2_pilot)
+
+
 if __name__ == "__main__":
     unittest.main()

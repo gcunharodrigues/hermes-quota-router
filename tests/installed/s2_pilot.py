@@ -24,7 +24,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lifecycle import Failure, check  # noqa: E402
 from s2_probe import PROBE  # noqa: E402
 
-HOME = Path("/home/hermes/.hermes")
+# One home for checks, backups and the `hermes` CLI: HERMES_HOME (the runner sets it and subprocesses inherit it) or the standard default.
+HOME = Path(os.environ.get("HERMES_HOME") or "~/.hermes").expanduser()
 PLUGIN = "hermes-quota-router"
 ORIGIN = "gcunharodrigues/hermes-quota-router"
 GITHUB = "https://github.com/gcunharodrigues/hermes-quota-router.git"

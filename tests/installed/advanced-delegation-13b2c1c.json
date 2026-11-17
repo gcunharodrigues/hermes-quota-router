@@ -1,0 +1,28 @@
+{
+  "files": {
+    ".gitignore": "350e7767e5d38b9202e44cfeabcb2fbb9d0a684c841f23e39c402154eb08b92a",
+    "LICENSE": "5f79d321c17de8ef6e5f34967dc5b484afebeeefd87180890d9741941f6b815f",
+    "README.md": "bfbc15243895e9a3b79e551e09828a7f117924544212dc09b1c854a3734216bf",
+    "__init__.py": "87fd17f49fec523f1c1ce54bb0678498e235cc64f4fa66a37a710099f6a38d35",
+    "cli.py": "6206ea4eaad8e2a407e36a0fe2c05a114654e6c84e35faff73846bc39ca52fb0",
+    "model_map.py": "84b583f49c61cdc9740a3681ba917691d1ef376c2bc28806cc6cd22427ee9acb",
+    "plugin.yaml": "71d4bd26cb71e353d71cd04db9d5ea4955b013b139bc51ff94d831b77dd4b938",
+    "profile_routes.py": "1871bbc8e0bbf037ea0e8757201208370650c80e8c310097e0a012dd34120066",
+    "pytest.ini": "94fdc2d545b2d4077a4d70229fd22ba3ccac21d49d1097d2873f76d04e9a3c7a",
+    "slash.py": "8ef93a4eab268ffa9349ce80491f09cd3f27a3122b3a215ce59b3d93329c006f",
+    "store.py": "6608c5af1224f9d5634ac5e604b35752f3e5102963b01d1ea2e0c85ed747de3d",
+    "tests/conftest.py": "657e21fbb70fd40b628511752d261290e26773452b246aa314d98597e05e0864",
+    "tests/test_cli.py": "51543e23d9dd56555561910d0b54be26ab32872b1b8f575f4034e5465acdd582",
+    "tests/test_model_map.py": "f6c5cca1a15986e48730d8e61a651d4cfb7f70309c588bc26f61d0d345699a7e",
+    "tests/test_old_core.py": "0d4db29427ca186c095aa640457e58b42509818edc5650fd876cd7c9d83a2cd1",
+    "tests/test_profile_routes.py": "64101ea7433c67e8b1fcf2bac2bc3416383a33e7174c8f48a6983dd9690f0d92",
+    "tests/test_real_discovery_model_map.py": "4483b14f098083315fe9adb70425318f0f6753531848af629fcfdc37867c684c",
+    "tests/test_real_discovery_profile_routes.py": "5ef575606437ae4008fd31fbbf202ad46c51288cc99058874cbd0d53d6e02c8e",
+    "tests/test_register.py": "735c96d01a763caa3d0a2cb6062fe6dead28c3d5329d48df7eec9c851a4e8c69",
+    "tests/test_slash.py": "8e5e869f47e69014b26b677d5282a07caf0a38c486d924b05afafd182fdf0d1c",
+    "tests/test_slash_core.py": "129692e0151eb4d43d49c98e8b0f77f54a8ae8e1cb0895fdd8d1e20c77c1be7b",
+    "tests/test_slash_host.py": "6884af80ec7c17e7dead1f2eb7446f9c2a6a78bec0c47cb6ff1a26bb987b1873",
+    "tests/test_store.py": "31e4b8f977d38b049f228134dcd667089d2b0e360a9da33f1344b228f8dcb391"
+  },
+  "ref": "13b2c1c9c8204bf333df240b2aacf98c3e6250b7"
+}

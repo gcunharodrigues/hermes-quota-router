@@ -1,3 +1,4 @@
+# Implements decisions/hqr-20-amendment.md, section 13, AC-24 and D9/D12.
 """Plugin settings: schema, defaults and validation (HQR-20 amendment, section 13).
 
 Values live in the plugin's native subtree and are read and written only through ctx.get_config and ctx.set_config.
@@ -10,6 +11,7 @@ PROVIDERS = ("openai-codex", "anthropic")
 DEFAULTS = {
     "mode": "off",
     "consumers.subagents": True,
+    # decisions/hqr-20-amendment.md, D12: retained for saved-setting compatibility; it does not create a cron write group.
     "consumers.cron": True,
     "consumers.conversation": True,
     "conversation.policy": "principal_first",
@@ -21,6 +23,7 @@ DEFAULTS = {
     "models.astra": False,
     "limits.session_block_pct": 95,
     "limits.week_block_pct": 100,
+    # decisions/hqr-20-amendment.md, section 13: quota freshness defaults to 60 s, separately from the D17 attribution window.
     "limits.reading_max_age_s": 60,
     "limits.hysteresis_pct": 10,
     "roles": {},
@@ -60,10 +63,13 @@ def safe_model(value):
     return value if isinstance(value, str) and MODEL.match(value) and not SECRETISH.search(value) else None
 
 
+# decisions/hqr-20-amendment.md, D5/D9 and AC-24: each approved role must name both providers with safe model/effort pairs.
 def _valid_roles(value):
     if not isinstance(value, dict):
         return False, "expected a mapping of role to provider pairs"
     for role, pair in value.items():
+        if role == "cron" and pair == {"follows": "conversation"}:
+            continue
         if not safe_name(role) or not isinstance(pair, dict) or set(pair) != set(PROVIDERS):
             return False, "each role needs both providers"
         for provider, entry in pair.items():

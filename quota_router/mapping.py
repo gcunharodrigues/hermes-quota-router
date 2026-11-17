@@ -1,11 +1,97 @@
+# Implements decisions/hqr-20-amendment.md, section 15 and D5/D9/D12; decisions/s3-plan.md, "Mapa aprovado".
 """Equivalence map proposal by role and variant (HQR-20 amendment, section 15; decision D5).
 
 The proposal is never applied; only a map approved by Guilherme (`roles` setting, `config approve-map`) makes a decision actionable.
 """
 
+from copy import deepcopy
+import importlib
+import json
+import sys
+
 VARIANTS = ("base", "fable", "astra", "fable+astra")
 
+# Approved map data: decisions/s3-plan.md, "Mapa aprovado"; decisions/hqr-20-amendment.md, D9.
+_BASE_ROWS = {
+    "conversation": ("sol", "xhigh", "opus", "high"),
+    "general": ("sol", "medium", "opus", "medium"),
+    "analysis": ("sol", "high", "opus", "high"),
+    "strategy": ("sol", "xhigh", "opus", "high"),
+    "research": ("sol", "high", "opus", "high"),
+    "coding": ("sol", "xhigh", "opus", "high"),
+    "review": ("sol", "xhigh", "opus", "high"),
+    "deep": ("sol", "max", "opus", "xhigh"),
+    "routine": ("terra", "medium", "sonnet", "high"),
+    "triage": ("terra", "low", "sonnet", "medium"),
+    "extract": ("luna", "high", "haiku", "high"),
+}
+_MODEL_IDS = {"sol": "gpt-6.1-sol", "terra": "gpt-6.1-terra", "luna": "gpt-6-luna",
+              "opus": "claude-opus-5-5", "sonnet": "claude-sonnet-5-5", "haiku": "claude-haiku-5-5"}
 
+
+def approved_base():
+    result = {role: {"openai-codex": {"model": _MODEL_IDS[c], "effort": ce},
+                     "anthropic": {"model": _MODEL_IDS[a], "effort": ae}} for role, (c, ce, a, ae) in _BASE_ROWS.items()}
+    result["cron"] = {"follows": "conversation"}
+    return deepcopy(result)
+
+
+
+# decisions/s3-plan.md, "Mapa aprovado"; docs/compatibility.md, "Catálogo nativo models.dev na S3": unknown is not absent.
+def effective_map(proposal, settings):
+    """D18/D9: the approved settings are the map in effect, not a fresh S2 equivalence proposal."""
+    approved = settings['roles']
+    if not approved:
+        return proposal
+    return {'status': 'approved', 'source': 'settings.roles', 'effective_variant': 'base',
+            'label': 'base' if approved == approved_base() else 'approved',
+            'variants': {'base': deepcopy({role: pair for role, pair in approved.items() if role != 'cron'})},
+            'cron': {'follows': 'conversation'}, 'notes': []}
+
+
+def catalog_gate(provider, model, catalogs):
+    blocked = model_gate(model)
+    if blocked:
+        return blocked
+    catalog = catalogs.get(provider)
+    return "model_absent_from_catalog" if catalog is not None and model not in catalog else None
+
+
+def native_catalogs():
+    # docs/compatibility.md, "Catálogo nativo models.dev na S3": held public metadata is not account availability.
+    try:
+        module = sys.modules.get("agent.models_dev")
+        if module is None:
+            module = importlib.import_module("agent.models_dev")
+        registry = getattr(module, "_models_dev_cache", None)
+        if not isinstance(registry, dict) or not registry:
+            # decisions/hqr-20-amendment.md, AC-17: native cache loaders repair files; use only the path helper and read.
+            with open(module._get_cache_path(), 'r', encoding='utf-8-sig') as handle:
+                registry = json.load(handle)
+        provider_map = module.PROVIDER_TO_MODELS_DEV
+    except Exception:
+        return {}
+    if not isinstance(registry, dict) or not isinstance(provider_map, dict):
+        return {}
+    catalogs = {}
+    for provider in ("openai-codex", "anthropic"):
+        entry = registry.get(provider_map.get(provider))
+        models = entry.get("models") if isinstance(entry, dict) else None
+        if isinstance(models, dict) and models and all(isinstance(model, str) for model in models):
+            catalogs[provider] = list(models)
+    return catalogs
+
+
+def conversation_override(overrides):
+    def canonical(value):
+        return value.rsplit('/', 1)[-1].lower().replace('.', '-')
+    models = {canonical(m) for m in ("gpt-6.1-sol", "claude-opus-5-5")}
+    return any(isinstance(key, str) and canonical(key) in models for key in overrides)
+
+
+
+
+# decisions/hqr-20-amendment.md, section 17/D9: Fable/Astra variants remain unapproved, even if discovered.
 def model_gate(model):
     """Reason a target model cannot be chosen in S2, or None: Fable's own window and Astra's catalog are not visible."""
     name = (model or "").lower()

@@ -1,18 +1,18 @@
 {
   "manifest_version": 2,
   "name": "hermes-quota-router",
-  "version": "0.2.0rc1",
-  "description": "Optional OFF/Observe routing advice from native quota readings; AUTO unavailable until S3",
+  "version": "0.3.0rc1",
+  "description": "Optional OFF/Observe/Auto for next tasks from native quota readings",
   "kind": "standalone",
   "license": "MIT",
   "python_dependencies": [],
-  "provides_hooks": [],
+  "provides_hooks": ["on_session_open", "on_kanban_dispatch_tick", "subagent_start", "on_session_start", "api_request_error"],
   "provides_tools": [],
   "config_schema": {
     "mode": {
       "type": "str",
       "default": "off",
-      "description": "off or observe; auto is unavailable until S3"
+      "description": "off, observe or auto; Auto requires approved map and qualified native source"
     },
     "deployment": {
       "type": "dict",
@@ -26,7 +26,7 @@
     "consumers.cron": {
       "type": "bool",
       "default": true,
-      "description": "Auto writes the global cron model (S3)"
+      "description": "Accepted without effect: cron inherits conversation unless pinned"
     },
     "consumers.conversation": {
       "type": "bool",

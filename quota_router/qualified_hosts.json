@@ -1,0 +1,1108 @@
+{
+  "schema": 1,
+  "hosts": [
+    {
+      "functions": {
+        "agent.agent_init_fallback._fallback_entries":
+          "e35c565d944a7a7cf8aec960037028e0790af22313c36a9bd9328bb4ea178e6e",
+        "agent.agent_init_fallback._init_fallback_chain":
+          "06ba20dd0f031bbe316f17a397bd5ce0cfb3fc09cd25878840584f84a0cd718a",
+        "agent.agent_runtime_helpers.restore_primary_runtime":
+          "04f3aaeb524a180163c83fd7a53474a3b158c98096f20149cd7424864990c117",
+        "agent.chat_completion_helpers.try_activate_fallback":
+          "ffaa49d6fed1691eb2862ccf4dfa7836832e4f651c4db2cd12d169b827f17281",
+        "agent.delegation_provider.DelegationProvider.settings":
+          "519e2db6490993b7861a6fa30c00c8621819d027ce9ec8991b8f0887c1e95a54",
+        "agent.delegation_registry._usable":
+          "40b9e5f9145220a7350ae0e546f13fbcd4653578d9b966942c90735bb1225773",
+        "agent.delegation_registry.backend_status":
+          "bb669b4d0e4450ebead8f0f445d5b19c0f01b8a1a3b2dd7f279ae3e8b66068fa",
+        "agent.delegation_registry.configured_backend":
+          "027fc578c9af4b2d60290d10099fcb62c8ed0c0020ba52e62833ae26ceb264f8",
+        "agent.delegation_registry.get_active_provider":
+          "e07aa0ec34ae9feffcc52d871d7fffce43f82e2a260a031d8eaa657369d1f924",
+        "agent.models_dev._clear_etag":
+          "fd6aa884a95c4c4de79c19960b3f44aa0345c20a0bb9eb6669ac465392e48cab",
+        "agent.models_dev._disk_cache_age_seconds":
+          "508e1392f6916722eb930d88d8f80af3ec33c89b6029d49791185027b3d8cda3",
+        "agent.models_dev._get_cache_path":
+          "8db0c818bc09c2c61d97299383ed17dffd7ed16079da13b0d5c5c2cc83081dda",
+        "agent.models_dev._get_etag_path":
+          "3dd5925a94a9a4327b27dc003404f5cf79c3940bde0f539fd804dd70c05a41ee",
+        "agent.models_dev._hermes_path":
+          "f72b9b38beac62a10e575dc7a608c2cdd94e0677a088026489a57ed902f71522",
+        "agent.models_dev._load_disk_cache":
+          "b2155262c8783bba35d5e25b17a5146f9d641402ee7a7868235bff6300ecd95a",
+        "agent.models_dev._quarantine_corrupt_cache":
+          "d53d6e35641884e34d4a7932364608bf5a0a4ff511faa64cb6a86fc8f0d5aab8",
+        "agent.models_dev._quietly":
+          "871f995108525d0c6cdc22f1490a5c90a9737e121d5f33f54809c40ca369eb12",
+        "agent.models_dev._validate_registry":
+          "70f6a852ba7b2a09e1cf1f6c6c0023633a7dc979b7e80f83fb75567eba68bc0b",
+        "agent.models_dev.fetch_models_dev":
+          "934be7b1ecec88d5a7faa9d270b32dec9bdd99906a27a8d724799ff3cbf3bb98",
+        "cron.scheduler._job_fallback_chain":
+          "13e0f69549be5e341098b4e5ca1c92f2ea1a999215b287fdaac8bb37a0282fd6",
+        "cron.scheduler._resolve_job_reasoning_config":
+          "793574d3299dc1f7a78e5d48a4257528991ffac3304394040f6fde1607a333bd",
+        "gateway.run_config_loaders.GatewayConfigLoadersMixin._apply_fallback_chain_to_agent":
+          "9c763ad370f953062f146851b2706ac72e8a3fbab1358257c0409c672e019e7f",
+        "gateway.run_config_loaders.GatewayConfigLoadersMixin._refresh_fallback_model":
+          "85d4fa92719025e5e0e742d9f49560d888c3b17b442bf9c5b18038ed212184dd",
+        "hermes_cli.auth._plugin_aliases":
+          "4bf224340b8992941c9630715f79d5f005dc26a040e43bc0a7186ef46182ca57",
+        "hermes_cli.auth._registry_lookup":
+          "c00053e079b0af8e26e32cd68d41307eb80dd1fc00c1de92cb6b56323102e93b",
+        "hermes_cli.auth.resolve_provider":
+          "0bda72b5e9fe64200abc997cf44763260adf5e9888c839d9a7d572b5a7542343",
+        "hermes_cli.auth_codex._codex_base_url":
+          "e52420946c7a3e97cde36a250527d4dfd2c0f529951448ddc4930516b8870c1f",
+        "hermes_cli.auth_codex._codex_pool_route_base_url":
+          "894c7f652e27c465ab0d9d29b6a4d1dff263e9aef9179c68dc6783ead882fd6b",
+        "hermes_cli.auth_codex._codex_runtime_result":
+          "4317f0b4e739eb3c9cc82efdc0cba02f2a8647c9eae463431be41d6487dbeb16",
+        "hermes_cli.auth_codex.resolve_codex_runtime_credentials":
+          "8112c82bf5a16888cded6decca45e1c00db3d90d0e4eab84b7ade8b9f640620d",
+        "hermes_cli.cli_chat_turn_mixin.CLIChatTurnMixin._sync_fallback_chain_with_config":
+          "fcc3491cf379a3cd691aa8adb66115b63c014bba9d1ebfdf8f0c19b77c79af5f",
+        "hermes_cli.config._greedy_literal_match":
+          "efbc20dfe4288ebf8126bc49f7a7e7cba077fd9355468b70bf05a757007c7c35",
+        "hermes_cli.config._split_key_path":
+          "a3ed80179dae4e84901426b842345f3b84960e5d81c024bf3a471f672e494f12",
+        "hermes_cli.config.get_config_path":
+          "a92bccd5ca9e167184f7272d06327694d5d8015c8a8b50d92fef32f9770e447b",
+        "hermes_cli.config.load_config_readonly":
+          "90c2e3620b4da05ec1e7935a52f873394365428b03d563f98412452ceeaf22cf",
+        "hermes_cli.config_backend.Changes":
+          "e75174cfc9733a8286155e876824fe67a6dc3382443b6e2889b4e6aea41b2fa9",
+        "hermes_cli.config_backend.FileBackend":
+          "33ad02d3e0d270efb2806cb7aa49168e21c8df6eeb8225d5003f1e1584756455",
+        "hermes_cli.config_backend.FileBackend.read_path":
+          "9746a5835611fa92379b612c45ca6a7feb12f677ebfc9ecfc815fce6689c4952",
+        "hermes_cli.config_backend.FileBackend.write_changes":
+          "05a21d40ee2706819f1d1b9fc43ef3157362175dd6cf1dfcabee08dbea76da0a",
+        "hermes_cli.config_backend.FileBackend.write_path":
+          "9f99c68588bf493d46a98aa0ca2412ebd98ce6c3eb6cda9a9309dbd699031b66",
+        "hermes_cli.config_backend._backend_for":
+          "c566482ceae7d0f6be1ce90392dee966fa8431902697aaf96a011ba8e2626601",
+        "hermes_cli.config_backend._bootstrap":
+          "84f0dae4a38765158961ad4a10c73052ae7ed46e725ba57f1d568e243ef388a5",
+        "hermes_cli.config_backend._ensure_bootstrap_env":
+          "fcbb0cff38093867532e80d86d52657ed8f631213adf42fb7f667a0de8220c08",
+        "hermes_cli.config_backend._route":
+          "f2e3e3fb46f501a531c4c429a3841db00119134b4d8d6d4093591869624c651c",
+        "hermes_cli.config_backend.get_config_backend":
+          "54b00785ae3e0ae7750e1549603b1b6849b3a6b89c9e3b499de2d68adfb67ef2",
+        "hermes_cli.config_backend.read_config_doc":
+          "459695d0c29a7cd04f18d79ed17b4077f98117c988fb4a64cd7859466e92272e",
+        "hermes_cli.config_backend.write_changes":
+          "da2a33bd1071da37b4fecead4b9b2b78a493cabadd5fc5dc32d7580551ad52c0",
+        "hermes_cli.config_backend.write_config_keys":
+          "4b6211fd564557933f234128d8f7fce5e1c21938653e14e1771b661e02a129b5",
+        "hermes_cli.fallback_config._entry_identity":
+          "9b962bbf2beb5140a6e792ee7f4627a4d7eb58ecd11a6681bc560ec3650afe44",
+        "hermes_cli.fallback_config._iter_fallback_entries":
+          "526271155a09a1b7351570ea318923503fffa6d265b3471444911cfc3c08dfdf",
+        "hermes_cli.fallback_config._normalized_base_url":
+          "959abc562ce39ced6bd27b799a8fcbf7bcc1d148300e6584ee0ba6bd38b3cfd7",
+        "hermes_cli.fallback_config.get_fallback_chain":
+          "ef9f7e389aded6bb2f93081ff73a7bdac24a42b434fd034284b5e17514b82cd0",
+        "hermes_cli.fallback_config.scoped_fallback_chain":
+          "9b092348c6301a0754510bba79fc44c144bb3a0b6ffc8d40a817ede328bf6ae9",
+        "hermes_cli.model_switch._Switch.resolve_runtime":
+          "7694c5dd824ed5e5b9ac4ff0935a33a79e15bf69e7a3516cc76609873db83923",
+        "hermes_cli.model_switch._build_switch_result":
+          "8a1ed1ccdd6b0dda437ac852ec68b59ddc559c7d7849195f490e843de86f5073",
+        "hermes_cli.model_switch._creds_for_current_provider":
+          "baf7c77de4b24bb2c10934634fb97de2698cb24c76a5c74a6f3e3f2f1d5b1588",
+        "hermes_cli.model_switch._creds_for_switched_provider":
+          "6a2abf47901717a232bd1ef2d396f445eb17de777ee8e2f835495ef30dfb4a6d",
+        "hermes_cli.model_switch._resolve_switch_credentials":
+          "d9e7be8490a1e9dc15f93afcbafd5ffec7a950f14a136584b57509ce174e9d74",
+        "hermes_cli.model_switch.model_derived_api_mode":
+          "023d816a4b01c9dd218622aa112901903f1bae7f7e7e76adf3a74ef4dd550492",
+        "hermes_cli.model_switch.model_selection_config_updates":
+          "c83e82a47fe60c731df89934f1c7590b3ec15e698527e0dc08983fb3cb0e9768",
+        "hermes_cli.model_switch.selection_route_changed":
+          "90467c9438d061755301df720225783d4db6cf696c86ddaccfa188e68cd27cf4",
+        "hermes_cli.model_switch.switch_model":
+          "5f16e52d0672150c85f9e025f155c28dadce0f89a8aa66a7d012b9279674b648",
+        "hermes_cli.models.opencode_provider_family":
+          "40c5309ddd3f8ce104cb7e463d70a852925191335055bde870b875218b3c0540",
+        "hermes_cli.plugins_context.PluginContext.register_hook":
+          "59f2c7eaf1fd21d77c1159fd34ad874e29dc5a40268faff02666d69fd9f59270",
+        "hermes_cli.plugins_ledger.PluginRegistration.dispose":
+          "ebdfd2d403684e8c67ea0fbf39c40d727608a336015669d89a17e9130a745bf7",
+        "hermes_cli.providers.determine_api_mode":
+          "9a922bbf053932c39ef563aba34570034c1af799251931611eabaadad734541a",
+        "hermes_cli.providers.host_mandated_api_mode":
+          "d4c7c467a6fdda387a65b776426977ce5042c50f9cd6eed8d91a9cd611518014",
+        "hermes_cli.providers.is_actual_route":
+          "45cb44a5d036f1ff2543e8f007901acf97eb038641902685e17e7007dfbc79ab",
+        "hermes_cli.providers.is_official_openai_host":
+          "5b331fa9cfbc39b76611437899f9086ccd9c19138bbdfcc12a06468aa2cdd9bb",
+        "hermes_cli.route_identity.normalize_route_base_url":
+          "017ded7fb9019f7d52079536713c715b9aabaac4f60974170d645d84ab59f0e0",
+        "hermes_cli.route_identity.should_clear_context_pin":
+          "8cc1d55c1b527491056fec2264418a8eaa3569e8a0bcf67d0d7934e57ce55c95",
+        "hermes_cli.runtime_provider._OAuthRuntimeSpec":
+          "1566941951140996a7dfe7972a394c1f95821e5075717e7465a43d2ffb72adc7",
+        "hermes_cli.runtime_provider._anthropic_base_url_override_ok":
+          "0e2b9850ef55f29dbea62ee6afaa77c117be8d5a00fe405da4f93737a7eee6c1",
+        "hermes_cli.runtime_provider._anthropic_cfg_base_url":
+          "58882e8461410c4f7117489172a195635bf3894e5987e9f3a0f15dd74e5450f1",
+        "hermes_cli.runtime_provider._anthropic_env_runtime":
+          "f8cac2e8ddbe0d2613da6c36bdcbaf48dbd8bc72fa054610dc565a9f9204cca9",
+        "hermes_cli.runtime_provider._cfg_provider":
+          "dc8f04b26735504c3a7f9d892bd222a01c70c32105fb38749dce587694418dae",
+        "hermes_cli.runtime_provider._config_base_url_for_provider":
+          "66b1fb863d70358cb2c0d68dabc8e91bf6c81a8963f93551ef5a81b28479c00c",
+        "hermes_cli.runtime_provider._detect_api_mode_for_url":
+          "6758060745b7d78e1c575ffa3f5f891f637f09c304e3215ba0c675448c014471",
+        "hermes_cli.runtime_provider._effective_model":
+          "8c08f68c6d37575575ab59a40f438d4dff9c08550f02f6183ffe491566e42c49",
+        "hermes_cli.runtime_provider._explicit_anthropic":
+          "6a141aaf84847caae120817f36d9605df8db2a9ced62c8117d38549e61067484",
+        "hermes_cli.runtime_provider._explicit_codex":
+          "40d6de97ef5ee64a0e9de73bec04cc3b42bc656d8dd484dd06ab12305e48e7be",
+        "hermes_cli.runtime_provider._finalize_base_url":
+          "509b7d2532131bbbb8d059a6997386ec3ce46a94958db52769923dc18c2ec252",
+        "hermes_cli.runtime_provider._get_model_config":
+          "be4439dee6b73a197016aaf05428b95dad519bbe3ee6faee14dfa5375aaa1102",
+        "hermes_cli.runtime_provider._get_named_custom_provider":
+          "3e55ffb28cc74637204f03e782cd70e86dc125f1158edd184279d43b3a1577ee",
+        "hermes_cli.runtime_provider._ladder_rungs":
+          "0be077055b032b849b0813abbe51a0ae5a8283ed4fe10169b7cd8825e28f5780",
+        "hermes_cli.runtime_provider._local_endpoint_bypass":
+          "333fe10f85dcda334507cd81b2b0795922441745fc8953e6c06740bd6cd626d0",
+        "hermes_cli.runtime_provider._maybe_apply_codex_app_server_runtime":
+          "4246a609c499d911b7da9d1b1ecd786f7a9c04c01af984fc362aaaf5a83702e9",
+        "hermes_cli.runtime_provider._named_custom_rung":
+          "90a79311a5e9e060d9d403ad6606e4e4b3ab6b2d28d7e23a37b5a0891d09f615",
+        "hermes_cli.runtime_provider._pool_entry_base_url":
+          "392f0500dc03998cb961d46d4c4b340d6ec8ed68a151201183635672f21cfb3b",
+        "hermes_cli.runtime_provider._pool_entry_mode_and_url":
+          "196bf32f1dafa1c2538042d40d12bfb809d400f19f4dd327b6b36fffe057649d",
+        "hermes_cli.runtime_provider._resolve_explicit_runtime":
+          "de7b897f5dcbb1e10b8c03a76d18642a04a52924fb3f8d0f8e1386fbe86131a1",
+        "hermes_cli.runtime_provider._resolve_from_pool":
+          "8631389d9244a6ce8b9535a945a6a477eaee6375275ad34dfb47a17c9498170b",
+        "hermes_cli.runtime_provider._resolve_named_custom_runtime":
+          "17c1b36c1d4d02cb0ac8c5e5ffd60b3dcf8b7e4ad0639996fb9a74d037696cd1",
+        "hermes_cli.runtime_provider._resolve_oauth_runtime":
+          "4b08137d697f4bf1a74207c010dd641fcb40ec054a8c11b1720f2ecfddd5ab5f",
+        "hermes_cli.runtime_provider._resolve_requested_shortcuts":
+          "795c21a9f9b690fe2429d4b6e705ee06f7f0e4fa9ec012a15a51bce20e2d7079",
+        "hermes_cli.runtime_provider._resolve_runtime_from_pool_entry":
+          "e770aa23e1db3b9b67809898c9f82eba9661ba202fa70b3b74e818ebf7cb179e",
+        "hermes_cli.runtime_provider._resolves_to_custom":
+          "5bc98766902279690a388f82185491ad6559568b6d1f3078804a15cd79d4cd7c",
+        "hermes_cli.runtime_provider._runtime":
+          "39ed168d16d7b1ab12ba8185d8e884bf7d9e5b5b9206e8478f34442ad05ca534",
+        "hermes_cli.runtime_provider._same_registered_provider":
+          "21b37e9b32a594912654d8e7c1f3384e91cd5c950f7412fb805ac2b9707ae4cf",
+        "hermes_cli.runtime_provider.expand_direct_api_alias":
+          "b2061daa104d79ea62dc052aea3bc108831e650f6c4b60b48e95cf217026afb2",
+        "hermes_cli.runtime_provider.load_config":
+          "53ad007173327fc2d71eafd4deb6708e60844dbe74318e2061605689e2b960db",
+        "hermes_cli.runtime_provider.resolve_codex_runtime_credentials":
+          "8112c82bf5a16888cded6decca45e1c00db3d90d0e4eab84b7ade8b9f640620d",
+        "hermes_cli.runtime_provider.resolve_provider":
+          "0bda72b5e9fe64200abc997cf44763260adf5e9888c839d9a7d572b5a7542343",
+        "hermes_cli.runtime_provider.resolve_requested_provider":
+          "ed82a96eaf0fdd3b6856cc5d694c9f23dcb017d36f9a8b84641cc77d202ff397",
+        "hermes_cli.runtime_provider.resolve_runtime_provider":
+          "7635fa9137073598d2b20d5f6b075ad85e3c4bf2cf6f5faf3f9f79bdb8aadcbd",
+        "hermes_cli.runtime_provider_custom._get_named_custom_provider":
+          "3e55ffb28cc74637204f03e782cd70e86dc125f1158edd184279d43b3a1577ee",
+        "hermes_cli.runtime_provider_custom._normalize_custom_provider_name":
+          "3d9d1a4f25c2f08dfa38414e296bb82a3503dab2decbc10e56844d74e3aac86c",
+        "hermes_cli.runtime_provider_custom._resolve_named_custom_runtime":
+          "17c1b36c1d4d02cb0ac8c5e5ffd60b3dcf8b7e4ad0639996fb9a74d037696cd1",
+        "hermes_cli.runtime_provider_custom._rp":
+          "ba84e650e45e0d4155ff35096fd156506f767ad1196dbcaf707336eff15bd65b",
+        "hermes_cli.runtime_provider_custom._select_named_custom_provider":
+          "2e1f815324a9a82b0045d073c9088011bc120f85dda6faf33f0a71e80069376c",
+        "hermes_cli.runtime_provider_custom._shadowed_by_builtin":
+          "75351ef3611ae79de85e9cc627d964268d89d0a0200e89169d46dc7c2182e4bc",
+        "hermes_cli.runtime_provider_custom.expand_direct_api_alias":
+          "b2061daa104d79ea62dc052aea3bc108831e650f6c4b60b48e95cf217026afb2",
+        "hermes_constants._canonical_model_variants":
+          "3b5a4407bf903a140eb50b23de5c87d1340d0ac2372f6739a245a20f00a88564",
+        "hermes_constants.get_hermes_home":
+          "bf1ce58ac6df03c2d0754ceb0984ed3ccc8d9582d91e3d1bd2c7e7c9329649f0",
+        "hermes_constants.parse_reasoning_effort":
+          "16a6bfbdca9364dda85b23178a970b12c2ed93ba89aa11fccdfbab22f3b9e9e4",
+        "hermes_constants.resolve_per_model_reasoning_effort":
+          "249a9d1268908697c32baa3baf8fe93ba67998c17668bc0b4df98b36117b5937",
+        "hermes_constants.resolve_reasoning_config":
+          "fa0c43e725eed7ea61d19a7efca99f2516fb9a6e3bde02a00f25449759c4d9ce",
+        "hermes_plugins.advanced_delegation.model_map.ModelMapDelegationProvider.route_task":
+          "490051bc296f73851e6c3e65e3955beea1a946a1468673f595c6c806f35eccfb",
+        "hermes_plugins.advanced_delegation.model_map.ModelMapDelegationProvider.task_parameters":
+          "f1c399c1ea60b0c0671f132a63269f41d67fbe48e2eb5d78ac536d3f97848e6a",
+        "hermes_plugins.advanced_delegation.model_map._entry_problem":
+          "4b833f07ffcf6a43ce5203776c4ec279e883e815876a859afcfdf96b23824ada",
+        "hermes_plugins.advanced_delegation.model_map._is_codex":
+          "3a4286b6f2418582a811c7c755aeea446cbf25d2d39029d2387c03b5c16dd64e",
+        "hermes_plugins.advanced_delegation.model_map._text":
+          "b391dbfccea54c60fcc66d8b0d4b135f31abf96444e40e220f674eb7c06feaa9",
+        "hermes_plugins.advanced_delegation.model_map.configured_options":
+          "7882592569cb40c63772b0af05259d718bc020971454f2fdbe6670b9e0705d4a",
+        "hermes_state_sessions.SessionSessionsMixin.get_session":
+          "f721b7cf4bde8e301c105c2d1086dc2c91ecff22886871b31ff2f9f37d549e82",
+        "hermes_state_sessions.SessionSessionsMixin.get_session_model_config_value":
+          "f3368458d4026a9ce94f1f9f718dfc51cb7a0b5dc49a189f2f2de08aace03481",
+        "hermes_yaml._load":
+          "d37619e1fd8a16e3d85430ddff7968577767bc6172088756a6bfead0658e5165",
+        "hermes_yaml.roundtrip_yaml":
+          "3c546dd8ae0d9da5e00995cad929facd21d3aacb60ceec2e0a07a160df9cf025",
+        "hermes_yaml.safe_load":
+          "c93d3925742202d4bfd852e08b1bafa536d3f57ebc8d9d6dd5a40381f2de3ffa",
+        "tools.delegate_tool_config._cfg":
+          "78b2a1b2f441fb6965da7e502f924d95ddf307e5071d14cacdbc550302d125b0",
+        "tools.delegate_tool_config._child_reasoning":
+          "254c39e0c5c73e130be5aa0f06ac3b6c74e07f0b7346c0a76be854e3960906d1",
+        "tools.delegate_tool_config._load_config":
+          "9106cd1ba72291a74ce323183ce2f24436e7bc3073925ef406e6ee81ec48e4cb",
+        "tools.delegate_tool_config._resolve_child_fallback_chain":
+          "399290dd0553d4c9954373affd4ac6aee93914998e5bb515ab1e92e5dbeb9f70",
+        "tools.delegate_tool_config._resolve_child_runtime":
+          "be8eaf74b2f379f3f636a1c728c45697fa47a71738bf7245e840832dd0e2f7e3",
+        "tools.delegate_tool_routes._active_provider":
+          "09d73d854c6fdcb877f16e2c7968d11f2baf3b6ebf74bba7c32f9e3a1e4df400",
+        "tools.delegate_tool_routes._clean_route":
+          "766bb69069bfbbe674666b6bd34ad2426db6e79fb691372c9ab9da3402a28c84",
+        "tools.delegate_tool_routes._declared_parameters":
+          "944f7b00a4c35db9a294399d8f2fb6f8e5f8cb0b10d2ed1ea66a51ecd945f705",
+        "tools.delegate_tool_routes._param_error":
+          "7c7129fc41c876809253bb0fe1ca0e730d99926bcda27c753c64db3b1ef0df3d",
+        "tools.delegate_tool_routes._route_one":
+          "f16950d2cad373ee70497f35d06d06c05264902a43d8d9ac20fce5d08459f0e7",
+        "tools.delegate_tool_routes._route_to_task_route":
+          "c8883ceebef6d8d6b3363c9be50e2f2fccb4317dc35edb71f5e7625bc82986f0",
+        "tools.delegate_tool_routes._with_inherited_fallback":
+          "debad3d0fbd0d1d495504da5d337b2bb93fa4f93e68b62211e26b646f4ad0e91",
+        "tui_gateway.agent_callbacks._sync_agent_fallback_with_config":
+          "b76d8c13addb4c0bc8dc8f59134a512d59122cc71da4d781f4cfb88645a41d7b",
+        "utils._atomic_write":
+          "3200be7d40df35323ab55da29dde05b1ba2194aa673c4d09294cfc68d5a14ae5",
+        "utils._mode_for_write":
+          "1e5b82be00bc938ca1807b948eb76216a265e6077875cda81a8fc855cea6d512",
+        "utils._preserve_file_mode":
+          "027ba90fd7b352fa0990f4a1422a9f43be138e989017ef6b23d7cec3786f9896",
+        "utils._roundtrip_dump":
+          "5d90daf354de038cc6bcf71ae3c60c9779e04e96754a6431114e5f6bea2f1477",
+        "utils._roundtrip_load":
+          "45b43337a7d39cb8eb493e5b8e358972ab3304a7714af93ee600bbf9ae3a61a1",
+        "utils.atomic_roundtrip_yaml_save":
+          "5c6d49b9a20abafcb7b6fc30ca6784e4fe1ed1921f9e202e3ddb8ae7559079e0",
+        "utils.atomic_roundtrip_yaml_update":
+          "ba471231864a8e457168e07060c438ad0d2c39f76e45ac3b698f89755c0783cf",
+        "utils.base_url_host_matches":
+          "1869c4d607a48f48aca2f121df0c61a8eee71f4a12d069877482c84ba3b6d259",
+        "utils.base_url_hostname":
+          "441b45bcb43f1a794dba096a712b745f7acd48bd298c83bd7c5cd981e540d01e",
+        "utils.base_url_path":
+          "1e25c291341b5d1cb6790bb273a96ca04cb2866d0b00da6c8c565b63dba74454",
+        "utils.fast_safe_load":
+          "04387bef8bae1012e484d61564367967a8064365488f30832f9498a98ab67d73"
+      },
+      "constants": {
+        "agent.models_dev.PROVIDER_TO_MODELS_DEV": {
+          "ai-gateway": "vercel",
+          "alibaba": "alibaba",
+          "anthropic": "anthropic",
+          "cohere": "cohere",
+          "deepseek": "deepseek",
+          "fireworks": "fireworks-ai",
+          "gemini": "google",
+          "google": "google",
+          "groq": "groq",
+          "huggingface": "huggingface",
+          "kilocode": "kilo",
+          "kimi": "kimi-for-coding",
+          "kimi-coding": "kimi-for-coding",
+          "kimi-coding-cn": "kimi-for-coding",
+          "meta": "meta",
+          "meta-ai": "meta",
+          "minimax": "minimax",
+          "minimax-cn": "minimax-cn",
+          "minimax-oauth": "minimax",
+          "mistral": "mistral",
+          "moonshot": "kimi-for-coding",
+          "novita": "novita-ai",
+          "nvidia": "nvidia",
+          "ollama-cloud": "ollama-cloud",
+          "openai": "openai",
+          "openai-api": "openai",
+          "openai-codex": "openai",
+          "opencode-go": "opencode-go",
+          "opencode-zen": "opencode",
+          "openrouter": "openrouter",
+          "perplexity": "perplexity",
+          "qwen-oauth": "alibaba",
+          "stepfun": "stepfun",
+          "togetherai": "togetherai",
+          "xai": "xai",
+          "xai-oauth": "xai",
+          "xiaomi": "xiaomi",
+          "zai": "zai"
+        },
+        "gateway.session_policy.FOLLOW_AGENT_KEYS": [
+          "reasoning_effort",
+          "reasoning_overrides",
+          "service_tier",
+          "disabled_toolsets",
+          "coding_context"
+        ],
+        "gateway.session_policy.FOLLOW_SECTIONS": [
+          "model",
+          "providers",
+          "custom_providers",
+          "fallback_providers",
+          "fallback_model",
+          "model_aliases",
+          "platform_toolsets"
+        ],
+        "hermes_cli.auth._PROVIDER_ALIASES": {
+          "aci": "actual",
+          "actual-computer": "actual",
+          "actualcomputer": "actual",
+          "aigateway": "ai-gateway",
+          "alibaba-coding": "alibaba-coding-plan",
+          "alibaba_coding": "alibaba-coding-plan",
+          "alibaba_coding_plan": "alibaba-coding-plan",
+          "amazon": "bedrock",
+          "amazon-bedrock": "bedrock",
+          "arcee-ai": "arcee",
+          "arceeai": "arcee",
+          "aws": "bedrock",
+          "aws-bedrock": "bedrock",
+          "chatgpt": "openai-codex",
+          "chatgpt-codex": "openai-codex",
+          "claude": "anthropic",
+          "claude-code": "anthropic",
+          "glm": "zai",
+          "gmi-cloud": "gmi",
+          "gmicloud": "gmi",
+          "go": "opencode-go",
+          "google": "gemini",
+          "google-ai-studio": "gemini",
+          "google-gemini": "gemini",
+          "grok": "xai",
+          "grok-oauth": "xai-oauth",
+          "hf": "huggingface",
+          "hugging-face": "huggingface",
+          "huggingface-hub": "huggingface",
+          "kilo": "kilocode",
+          "kilo-code": "kilocode",
+          "kilo-gateway": "kilocode",
+          "kimi": "kimi-coding",
+          "kimi-cn": "kimi-coding-cn",
+          "kimi-for-coding": "kimi-coding",
+          "llama-cpp": "custom",
+          "llama.cpp": "custom",
+          "llamacpp": "custom",
+          "lm-studio": "lmstudio",
+          "lm_studio": "lmstudio",
+          "lmstudio": "lmstudio",
+          "local": "custom",
+          "mimo": "xiaomi",
+          "minimax-china": "minimax-cn",
+          "minimax-global": "minimax-oauth",
+          "minimax-portal": "minimax-oauth",
+          "minimax_cn": "minimax-cn",
+          "minimax_oauth": "minimax-oauth",
+          "moonshot": "kimi-coding",
+          "moonshot-cn": "kimi-coding-cn",
+          "ollama": "custom",
+          "ollama_cloud": "ollama-cloud",
+          "opencode": "opencode-zen",
+          "opencode-go-sub": "opencode-go",
+          "qwen-cli": "qwen-oauth",
+          "qwen-oauth": "qwen-oauth",
+          "qwen-portal": "qwen-oauth",
+          "step": "stepfun",
+          "stepfun-coding-plan": "stepfun",
+          "tencent": "tencent-tokenhub",
+          "tencent-cloud": "tencent-tokenhub",
+          "tencent-lkeap": "tencent-tokenplan",
+          "tencentmaas": "tencent-tokenhub",
+          "tokenhub": "tencent-tokenhub",
+          "tokenplan": "tencent-tokenplan",
+          "vercel": "ai-gateway",
+          "vercel-ai-gateway": "ai-gateway",
+          "vllm": "custom",
+          "x-ai": "xai",
+          "x-ai-oauth": "xai-oauth",
+          "x.ai": "xai",
+          "xai-grok-oauth": "xai-oauth",
+          "xai-oauth": "xai-oauth",
+          "xiaomi-mimo": "xiaomi",
+          "z-ai": "zai",
+          "z.ai": "zai",
+          "zen": "opencode-zen",
+          "zhipu": "zai"
+        },
+        "hermes_cli.auth_constants.DEFAULT_CODEX_BASE_URL": "https://chatgpt.com/backend-api/codex",
+        "hermes_cli.model_switch._PROVIDER_API_MODE_OVERRIDES": {
+          "routes": {},
+          "source_sha256":
+            "b123918773dfc0aa431269602a29c1e603e9f5eb5836df3b9400b303e4446c83"
+        },
+        "hermes_cli.providers.TRANSPORT_TO_API_MODE": {
+          "anthropic_messages": "anthropic_messages",
+          "bedrock_converse": "bedrock_converse",
+          "codex_responses": "codex_responses",
+          "openai_chat": "chat_completions"
+        },
+        "hermes_cli.providers._RESPONSES_NATIVE_HOSTS": [
+          "api.meta.ai",
+          "api.router.com"
+        ],
+        "hermes_cli.runtime_provider._ANTHROPIC_DEFAULT_BASE_URL": "https://api.anthropic.com",
+        "hermes_cli.runtime_provider._HOST_MANDATED_API_MODES": {
+          "api.actual.inc": "chat_completions",
+          "api.anthropic.com": "anthropic_messages",
+          "api.meta.ai": "codex_responses",
+          "api.router.com": "codex_responses",
+          "api.x.ai": "codex_responses"
+        },
+        "hermes_cli.runtime_provider._OAUTH_RUNTIME_PROVIDERS": {
+          "routes": {
+            "openai-codex": {
+              "api_mode": "codex_responses",
+              "default_base_url": "",
+              "resolve": [
+                "Lambda",
+                {
+                  "args": [
+                    "arguments",
+                    {}
+                  ],
+                  "body": [
+                    "Call",
+                    {
+                      "func": [
+                        "Name",
+                        {
+                          "ctx": [
+                            "Load",
+                            {}
+                          ],
+                          "id": "resolve_codex_runtime_credentials"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "source_sha256":
+            "86d442621fdccb9bb68e1ae307ad034ee83c448e926a6f23a00129dff6a9fffb"
+        },
+        "hermes_cli.runtime_provider._POOL_ENTRY_SIMPLE_MODES": {
+          "routes": {
+            "openai-codex": {
+              "api_mode": "codex_responses",
+              "base_url": "https://chatgpt.com/backend-api/codex"
+            }
+          },
+          "source_sha256":
+            "bfc8b7a3b7a91381189f19d8f903436038eb6fa467e313600ebef12709ebdbb5"
+        },
+        "hermes_cli.runtime_provider_custom._DIRECT_API_BASE_URLS": {
+          "openai": "https://api.openai.com/v1"
+        },
+        "hermes_constants.VALID_REASONING_EFFORTS": [
+          "minimal",
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max",
+          "ultra"
+        ],
+        "hermes_plugins.advanced_delegation.model_map.BACKEND": "model_map",
+        "hermes_plugins.advanced_delegation.model_map.DAYBREAK_KEY": "daybreak",
+        "hermes_plugins.advanced_delegation.model_map.PARAMETER": "option",
+        "hermes_plugins.advanced_delegation.model_map.ROUTE_FIELDS": [
+          "provider",
+          "model",
+          "base_url",
+          "api_key",
+          "api_mode",
+          "reasoning_effort",
+          "service_tier"
+        ],
+        "hermes_plugins.advanced_delegation.model_map.SETTINGS_PATH": "delegation.backends.model_map"
+      },
+      "label": "Hermes de trabalho com patches locais; fonte inspecionada, sem ensaio instalado S3",
+      "revision": "3b421578588243f920886e6fe79a6faa87ea026e",
+      "session_store_qualified": false,
+      "hooks_qualified": [],
+      "advanced_delegation": {
+        "version": "1.1.0",
+        "ref": "13b2c1c9c8204bf333df240b2aacf98c3e6250b7"
+      }
+    },
+    {
+      "functions": {
+        "agent.agent_init_fallback._fallback_entries":
+          "e35c565d944a7a7cf8aec960037028e0790af22313c36a9bd9328bb4ea178e6e",
+        "agent.agent_init_fallback._init_fallback_chain":
+          "06ba20dd0f031bbe316f17a397bd5ce0cfb3fc09cd25878840584f84a0cd718a",
+        "agent.agent_runtime_helpers.restore_primary_runtime":
+          "04f3aaeb524a180163c83fd7a53474a3b158c98096f20149cd7424864990c117",
+        "agent.chat_completion_helpers.try_activate_fallback":
+          "ffaa49d6fed1691eb2862ccf4dfa7836832e4f651c4db2cd12d169b827f17281",
+        "cron.scheduler._job_fallback_chain":
+          "13e0f69549be5e341098b4e5ca1c92f2ea1a999215b287fdaac8bb37a0282fd6",
+        "gateway.run_config_loaders.GatewayConfigLoadersMixin._apply_fallback_chain_to_agent":
+          "9c763ad370f953062f146851b2706ac72e8a3fbab1358257c0409c672e019e7f",
+        "gateway.run_config_loaders.GatewayConfigLoadersMixin._refresh_fallback_model":
+          "85d4fa92719025e5e0e742d9f49560d888c3b17b442bf9c5b18038ed212184dd",
+        "hermes_cli.cli_chat_turn_mixin.CLIChatTurnMixin._sync_fallback_chain_with_config":
+          "fcc3491cf379a3cd691aa8adb66115b63c014bba9d1ebfdf8f0c19b77c79af5f",
+        "hermes_cli.fallback_config._entry_identity":
+          "9b962bbf2beb5140a6e792ee7f4627a4d7eb58ecd11a6681bc560ec3650afe44",
+        "hermes_cli.fallback_config._iter_fallback_entries":
+          "526271155a09a1b7351570ea318923503fffa6d265b3471444911cfc3c08dfdf",
+        "hermes_cli.fallback_config._normalized_base_url":
+          "959abc562ce39ced6bd27b799a8fcbf7bcc1d148300e6584ee0ba6bd38b3cfd7",
+        "hermes_cli.fallback_config.get_fallback_chain":
+          "ef9f7e389aded6bb2f93081ff73a7bdac24a42b434fd034284b5e17514b82cd0",
+        "hermes_cli.fallback_config.scoped_fallback_chain":
+          "9b092348c6301a0754510bba79fc44c144bb3a0b6ffc8d40a817ede328bf6ae9",
+        "tools.delegate_tool_config._resolve_child_fallback_chain":
+          "399290dd0553d4c9954373affd4ac6aee93914998e5bb515ab1e92e5dbeb9f70",
+        "tools.delegate_tool_config._resolve_child_runtime":
+          "be8eaf74b2f379f3f636a1c728c45697fa47a71738bf7245e840832dd0e2f7e3",
+        "tools.delegate_tool_routes._route_to_task_route":
+          "c8883ceebef6d8d6b3363c9be50e2f2fccb4317dc35edb71f5e7625bc82986f0",
+        "tools.delegate_tool_routes._with_inherited_fallback":
+          "debad3d0fbd0d1d495504da5d337b2bb93fa4f93e68b62211e26b646f4ad0e91",
+        "tui_gateway.agent_callbacks._sync_agent_fallback_with_config":
+          "b76d8c13addb4c0bc8dc8f59134a512d59122cc71da4d781f4cfb88645a41d7b",
+        "agent.delegation_provider.DelegationProvider.settings":
+          "519e2db6490993b7861a6fa30c00c8621819d027ce9ec8991b8f0887c1e95a54",
+        "agent.delegation_registry._usable":
+          "40b9e5f9145220a7350ae0e546f13fbcd4653578d9b966942c90735bb1225773",
+        "agent.delegation_registry.backend_status":
+          "bb669b4d0e4450ebead8f0f445d5b19c0f01b8a1a3b2dd7f279ae3e8b66068fa",
+        "agent.delegation_registry.configured_backend":
+          "027fc578c9af4b2d60290d10099fcb62c8ed0c0020ba52e62833ae26ceb264f8",
+        "agent.delegation_registry.get_active_provider":
+          "e07aa0ec34ae9feffcc52d871d7fffce43f82e2a260a031d8eaa657369d1f924",
+        "agent.models_dev._clear_etag":
+          "fd6aa884a95c4c4de79c19960b3f44aa0345c20a0bb9eb6669ac465392e48cab",
+        "agent.models_dev._disk_cache_age_seconds":
+          "508e1392f6916722eb930d88d8f80af3ec33c89b6029d49791185027b3d8cda3",
+        "agent.models_dev._get_cache_path":
+          "8db0c818bc09c2c61d97299383ed17dffd7ed16079da13b0d5c5c2cc83081dda",
+        "agent.models_dev._get_etag_path":
+          "3dd5925a94a9a4327b27dc003404f5cf79c3940bde0f539fd804dd70c05a41ee",
+        "agent.models_dev._hermes_path":
+          "f72b9b38beac62a10e575dc7a608c2cdd94e0677a088026489a57ed902f71522",
+        "agent.models_dev._load_disk_cache":
+          "b2155262c8783bba35d5e25b17a5146f9d641402ee7a7868235bff6300ecd95a",
+        "agent.models_dev._quarantine_corrupt_cache":
+          "d53d6e35641884e34d4a7932364608bf5a0a4ff511faa64cb6a86fc8f0d5aab8",
+        "agent.models_dev._quietly":
+          "871f995108525d0c6cdc22f1490a5c90a9737e121d5f33f54809c40ca369eb12",
+        "agent.models_dev._validate_registry":
+          "70f6a852ba7b2a09e1cf1f6c6c0023633a7dc979b7e80f83fb75567eba68bc0b",
+        "agent.models_dev.fetch_models_dev":
+          "934be7b1ecec88d5a7faa9d270b32dec9bdd99906a27a8d724799ff3cbf3bb98",
+        "cron.scheduler._resolve_job_reasoning_config":
+          "793574d3299dc1f7a78e5d48a4257528991ffac3304394040f6fde1607a333bd",
+        "hermes_cli.auth._plugin_aliases":
+          "4bf224340b8992941c9630715f79d5f005dc26a040e43bc0a7186ef46182ca57",
+        "hermes_cli.auth._registry_lookup":
+          "c00053e079b0af8e26e32cd68d41307eb80dd1fc00c1de92cb6b56323102e93b",
+        "hermes_cli.auth.resolve_provider":
+          "0bda72b5e9fe64200abc997cf44763260adf5e9888c839d9a7d572b5a7542343",
+        "hermes_cli.auth_codex._codex_base_url":
+          "e52420946c7a3e97cde36a250527d4dfd2c0f529951448ddc4930516b8870c1f",
+        "hermes_cli.auth_codex._codex_pool_route_base_url":
+          "894c7f652e27c465ab0d9d29b6a4d1dff263e9aef9179c68dc6783ead882fd6b",
+        "hermes_cli.auth_codex._codex_runtime_result":
+          "4317f0b4e739eb3c9cc82efdc0cba02f2a8647c9eae463431be41d6487dbeb16",
+        "hermes_cli.auth_codex.resolve_codex_runtime_credentials":
+          "8112c82bf5a16888cded6decca45e1c00db3d90d0e4eab84b7ade8b9f640620d",
+        "hermes_cli.config._greedy_literal_match":
+          "efbc20dfe4288ebf8126bc49f7a7e7cba077fd9355468b70bf05a757007c7c35",
+        "hermes_cli.config._split_key_path":
+          "a3ed80179dae4e84901426b842345f3b84960e5d81c024bf3a471f672e494f12",
+        "hermes_cli.config.get_config_path":
+          "a92bccd5ca9e167184f7272d06327694d5d8015c8a8b50d92fef32f9770e447b",
+        "hermes_cli.config.load_config_readonly":
+          "90c2e3620b4da05ec1e7935a52f873394365428b03d563f98412452ceeaf22cf",
+        "hermes_cli.config_backend.Changes":
+          "e75174cfc9733a8286155e876824fe67a6dc3382443b6e2889b4e6aea41b2fa9",
+        "hermes_cli.config_backend.FileBackend":
+          "33ad02d3e0d270efb2806cb7aa49168e21c8df6eeb8225d5003f1e1584756455",
+        "hermes_cli.config_backend.FileBackend.read_path":
+          "9746a5835611fa92379b612c45ca6a7feb12f677ebfc9ecfc815fce6689c4952",
+        "hermes_cli.config_backend.FileBackend.write_changes":
+          "05a21d40ee2706819f1d1b9fc43ef3157362175dd6cf1dfcabee08dbea76da0a",
+        "hermes_cli.config_backend.FileBackend.write_path":
+          "9f99c68588bf493d46a98aa0ca2412ebd98ce6c3eb6cda9a9309dbd699031b66",
+        "hermes_cli.config_backend._backend_for":
+          "c566482ceae7d0f6be1ce90392dee966fa8431902697aaf96a011ba8e2626601",
+        "hermes_cli.config_backend._bootstrap":
+          "84f0dae4a38765158961ad4a10c73052ae7ed46e725ba57f1d568e243ef388a5",
+        "hermes_cli.config_backend._ensure_bootstrap_env":
+          "fcbb0cff38093867532e80d86d52657ed8f631213adf42fb7f667a0de8220c08",
+        "hermes_cli.config_backend._route":
+          "f2e3e3fb46f501a531c4c429a3841db00119134b4d8d6d4093591869624c651c",
+        "hermes_cli.config_backend.get_config_backend":
+          "54b00785ae3e0ae7750e1549603b1b6849b3a6b89c9e3b499de2d68adfb67ef2",
+        "hermes_cli.config_backend.read_config_doc":
+          "459695d0c29a7cd04f18d79ed17b4077f98117c988fb4a64cd7859466e92272e",
+        "hermes_cli.config_backend.write_changes":
+          "da2a33bd1071da37b4fecead4b9b2b78a493cabadd5fc5dc32d7580551ad52c0",
+        "hermes_cli.config_backend.write_config_keys":
+          "4b6211fd564557933f234128d8f7fce5e1c21938653e14e1771b661e02a129b5",
+        "hermes_cli.model_switch._Switch.resolve_runtime":
+          "7694c5dd824ed5e5b9ac4ff0935a33a79e15bf69e7a3516cc76609873db83923",
+        "hermes_cli.model_switch._build_switch_result":
+          "8a1ed1ccdd6b0dda437ac852ec68b59ddc559c7d7849195f490e843de86f5073",
+        "hermes_cli.model_switch._creds_for_current_provider":
+          "baf7c77de4b24bb2c10934634fb97de2698cb24c76a5c74a6f3e3f2f1d5b1588",
+        "hermes_cli.model_switch._creds_for_switched_provider":
+          "6a2abf47901717a232bd1ef2d396f445eb17de777ee8e2f835495ef30dfb4a6d",
+        "hermes_cli.model_switch._resolve_switch_credentials":
+          "d9e7be8490a1e9dc15f93afcbafd5ffec7a950f14a136584b57509ce174e9d74",
+        "hermes_cli.model_switch.model_derived_api_mode":
+          "023d816a4b01c9dd218622aa112901903f1bae7f7e7e76adf3a74ef4dd550492",
+        "hermes_cli.model_switch.model_selection_config_updates":
+          "c83e82a47fe60c731df89934f1c7590b3ec15e698527e0dc08983fb3cb0e9768",
+        "hermes_cli.model_switch.selection_route_changed":
+          "90467c9438d061755301df720225783d4db6cf696c86ddaccfa188e68cd27cf4",
+        "hermes_cli.model_switch.switch_model":
+          "5f16e52d0672150c85f9e025f155c28dadce0f89a8aa66a7d012b9279674b648",
+        "hermes_cli.models.opencode_provider_family":
+          "40c5309ddd3f8ce104cb7e463d70a852925191335055bde870b875218b3c0540",
+        "hermes_cli.plugins_context.PluginContext.register_hook":
+          "59f2c7eaf1fd21d77c1159fd34ad874e29dc5a40268faff02666d69fd9f59270",
+        "hermes_cli.plugins_ledger.PluginRegistration.dispose":
+          "ebdfd2d403684e8c67ea0fbf39c40d727608a336015669d89a17e9130a745bf7",
+        "hermes_cli.providers.determine_api_mode":
+          "9a922bbf053932c39ef563aba34570034c1af799251931611eabaadad734541a",
+        "hermes_cli.providers.host_mandated_api_mode":
+          "d4c7c467a6fdda387a65b776426977ce5042c50f9cd6eed8d91a9cd611518014",
+        "hermes_cli.providers.is_actual_route":
+          "45cb44a5d036f1ff2543e8f007901acf97eb038641902685e17e7007dfbc79ab",
+        "hermes_cli.providers.is_official_openai_host":
+          "5b331fa9cfbc39b76611437899f9086ccd9c19138bbdfcc12a06468aa2cdd9bb",
+        "hermes_cli.route_identity.normalize_route_base_url":
+          "017ded7fb9019f7d52079536713c715b9aabaac4f60974170d645d84ab59f0e0",
+        "hermes_cli.route_identity.should_clear_context_pin":
+          "8cc1d55c1b527491056fec2264418a8eaa3569e8a0bcf67d0d7934e57ce55c95",
+        "hermes_cli.runtime_provider._OAuthRuntimeSpec":
+          "1566941951140996a7dfe7972a394c1f95821e5075717e7465a43d2ffb72adc7",
+        "hermes_cli.runtime_provider._anthropic_base_url_override_ok":
+          "0e2b9850ef55f29dbea62ee6afaa77c117be8d5a00fe405da4f93737a7eee6c1",
+        "hermes_cli.runtime_provider._anthropic_cfg_base_url":
+          "58882e8461410c4f7117489172a195635bf3894e5987e9f3a0f15dd74e5450f1",
+        "hermes_cli.runtime_provider._anthropic_env_runtime":
+          "f8cac2e8ddbe0d2613da6c36bdcbaf48dbd8bc72fa054610dc565a9f9204cca9",
+        "hermes_cli.runtime_provider._cfg_provider":
+          "dc8f04b26735504c3a7f9d892bd222a01c70c32105fb38749dce587694418dae",
+        "hermes_cli.runtime_provider._config_base_url_for_provider":
+          "66b1fb863d70358cb2c0d68dabc8e91bf6c81a8963f93551ef5a81b28479c00c",
+        "hermes_cli.runtime_provider._detect_api_mode_for_url":
+          "6758060745b7d78e1c575ffa3f5f891f637f09c304e3215ba0c675448c014471",
+        "hermes_cli.runtime_provider._effective_model":
+          "8c08f68c6d37575575ab59a40f438d4dff9c08550f02f6183ffe491566e42c49",
+        "hermes_cli.runtime_provider._explicit_anthropic":
+          "6a141aaf84847caae120817f36d9605df8db2a9ced62c8117d38549e61067484",
+        "hermes_cli.runtime_provider._explicit_codex":
+          "40d6de97ef5ee64a0e9de73bec04cc3b42bc656d8dd484dd06ab12305e48e7be",
+        "hermes_cli.runtime_provider._finalize_base_url":
+          "509b7d2532131bbbb8d059a6997386ec3ce46a94958db52769923dc18c2ec252",
+        "hermes_cli.runtime_provider._get_model_config":
+          "be4439dee6b73a197016aaf05428b95dad519bbe3ee6faee14dfa5375aaa1102",
+        "hermes_cli.runtime_provider._get_named_custom_provider":
+          "3e55ffb28cc74637204f03e782cd70e86dc125f1158edd184279d43b3a1577ee",
+        "hermes_cli.runtime_provider._ladder_rungs":
+          "0be077055b032b849b0813abbe51a0ae5a8283ed4fe10169b7cd8825e28f5780",
+        "hermes_cli.runtime_provider._local_endpoint_bypass":
+          "333fe10f85dcda334507cd81b2b0795922441745fc8953e6c06740bd6cd626d0",
+        "hermes_cli.runtime_provider._maybe_apply_codex_app_server_runtime":
+          "4246a609c499d911b7da9d1b1ecd786f7a9c04c01af984fc362aaaf5a83702e9",
+        "hermes_cli.runtime_provider._named_custom_rung":
+          "90a79311a5e9e060d9d403ad6606e4e4b3ab6b2d28d7e23a37b5a0891d09f615",
+        "hermes_cli.runtime_provider._pool_entry_base_url":
+          "392f0500dc03998cb961d46d4c4b340d6ec8ed68a151201183635672f21cfb3b",
+        "hermes_cli.runtime_provider._pool_entry_mode_and_url":
+          "196bf32f1dafa1c2538042d40d12bfb809d400f19f4dd327b6b36fffe057649d",
+        "hermes_cli.runtime_provider._resolve_explicit_runtime":
+          "de7b897f5dcbb1e10b8c03a76d18642a04a52924fb3f8d0f8e1386fbe86131a1",
+        "hermes_cli.runtime_provider._resolve_from_pool":
+          "8631389d9244a6ce8b9535a945a6a477eaee6375275ad34dfb47a17c9498170b",
+        "hermes_cli.runtime_provider._resolve_named_custom_runtime":
+          "17c1b36c1d4d02cb0ac8c5e5ffd60b3dcf8b7e4ad0639996fb9a74d037696cd1",
+        "hermes_cli.runtime_provider._resolve_oauth_runtime":
+          "4b08137d697f4bf1a74207c010dd641fcb40ec054a8c11b1720f2ecfddd5ab5f",
+        "hermes_cli.runtime_provider._resolve_requested_shortcuts":
+          "795c21a9f9b690fe2429d4b6e705ee06f7f0e4fa9ec012a15a51bce20e2d7079",
+        "hermes_cli.runtime_provider._resolve_runtime_from_pool_entry":
+          "e770aa23e1db3b9b67809898c9f82eba9661ba202fa70b3b74e818ebf7cb179e",
+        "hermes_cli.runtime_provider._resolves_to_custom":
+          "5bc98766902279690a388f82185491ad6559568b6d1f3078804a15cd79d4cd7c",
+        "hermes_cli.runtime_provider._runtime":
+          "39ed168d16d7b1ab12ba8185d8e884bf7d9e5b5b9206e8478f34442ad05ca534",
+        "hermes_cli.runtime_provider._same_registered_provider":
+          "21b37e9b32a594912654d8e7c1f3384e91cd5c950f7412fb805ac2b9707ae4cf",
+        "hermes_cli.runtime_provider.expand_direct_api_alias":
+          "b2061daa104d79ea62dc052aea3bc108831e650f6c4b60b48e95cf217026afb2",
+        "hermes_cli.runtime_provider.load_config":
+          "53ad007173327fc2d71eafd4deb6708e60844dbe74318e2061605689e2b960db",
+        "hermes_cli.runtime_provider.resolve_codex_runtime_credentials":
+          "8112c82bf5a16888cded6decca45e1c00db3d90d0e4eab84b7ade8b9f640620d",
+        "hermes_cli.runtime_provider.resolve_provider":
+          "0bda72b5e9fe64200abc997cf44763260adf5e9888c839d9a7d572b5a7542343",
+        "hermes_cli.runtime_provider.resolve_requested_provider":
+          "ed82a96eaf0fdd3b6856cc5d694c9f23dcb017d36f9a8b84641cc77d202ff397",
+        "hermes_cli.runtime_provider.resolve_runtime_provider":
+          "7635fa9137073598d2b20d5f6b075ad85e3c4bf2cf6f5faf3f9f79bdb8aadcbd",
+        "hermes_cli.runtime_provider_custom._get_named_custom_provider":
+          "3e55ffb28cc74637204f03e782cd70e86dc125f1158edd184279d43b3a1577ee",
+        "hermes_cli.runtime_provider_custom._normalize_custom_provider_name":
+          "3d9d1a4f25c2f08dfa38414e296bb82a3503dab2decbc10e56844d74e3aac86c",
+        "hermes_cli.runtime_provider_custom._resolve_named_custom_runtime":
+          "17c1b36c1d4d02cb0ac8c5e5ffd60b3dcf8b7e4ad0639996fb9a74d037696cd1",
+        "hermes_cli.runtime_provider_custom._rp":
+          "ba84e650e45e0d4155ff35096fd156506f767ad1196dbcaf707336eff15bd65b",
+        "hermes_cli.runtime_provider_custom._select_named_custom_provider":
+          "2e1f815324a9a82b0045d073c9088011bc120f85dda6faf33f0a71e80069376c",
+        "hermes_cli.runtime_provider_custom._shadowed_by_builtin":
+          "75351ef3611ae79de85e9cc627d964268d89d0a0200e89169d46dc7c2182e4bc",
+        "hermes_cli.runtime_provider_custom.expand_direct_api_alias":
+          "b2061daa104d79ea62dc052aea3bc108831e650f6c4b60b48e95cf217026afb2",
+        "hermes_constants._canonical_model_variants":
+          "3b5a4407bf903a140eb50b23de5c87d1340d0ac2372f6739a245a20f00a88564",
+        "hermes_constants.get_hermes_home":
+          "bf1ce58ac6df03c2d0754ceb0984ed3ccc8d9582d91e3d1bd2c7e7c9329649f0",
+        "hermes_constants.parse_reasoning_effort":
+          "16a6bfbdca9364dda85b23178a970b12c2ed93ba89aa11fccdfbab22f3b9e9e4",
+        "hermes_constants.resolve_per_model_reasoning_effort":
+          "249a9d1268908697c32baa3baf8fe93ba67998c17668bc0b4df98b36117b5937",
+        "hermes_constants.resolve_reasoning_config":
+          "fa0c43e725eed7ea61d19a7efca99f2516fb9a6e3bde02a00f25449759c4d9ce",
+        "hermes_plugins.advanced_delegation.model_map.ModelMapDelegationProvider.route_task":
+          "490051bc296f73851e6c3e65e3955beea1a946a1468673f595c6c806f35eccfb",
+        "hermes_plugins.advanced_delegation.model_map.ModelMapDelegationProvider.task_parameters":
+          "f1c399c1ea60b0c0671f132a63269f41d67fbe48e2eb5d78ac536d3f97848e6a",
+        "hermes_plugins.advanced_delegation.model_map._entry_problem":
+          "4b833f07ffcf6a43ce5203776c4ec279e883e815876a859afcfdf96b23824ada",
+        "hermes_plugins.advanced_delegation.model_map._is_codex":
+          "3a4286b6f2418582a811c7c755aeea446cbf25d2d39029d2387c03b5c16dd64e",
+        "hermes_plugins.advanced_delegation.model_map._text":
+          "b391dbfccea54c60fcc66d8b0d4b135f31abf96444e40e220f674eb7c06feaa9",
+        "hermes_plugins.advanced_delegation.model_map.configured_options":
+          "7882592569cb40c63772b0af05259d718bc020971454f2fdbe6670b9e0705d4a",
+        "hermes_state_sessions.SessionSessionsMixin.get_session":
+          "f721b7cf4bde8e301c105c2d1086dc2c91ecff22886871b31ff2f9f37d549e82",
+        "hermes_state_sessions.SessionSessionsMixin.get_session_model_config_value":
+          "f3368458d4026a9ce94f1f9f718dfc51cb7a0b5dc49a189f2f2de08aace03481",
+        "hermes_yaml._load":
+          "d37619e1fd8a16e3d85430ddff7968577767bc6172088756a6bfead0658e5165",
+        "hermes_yaml.roundtrip_yaml":
+          "3c546dd8ae0d9da5e00995cad929facd21d3aacb60ceec2e0a07a160df9cf025",
+        "hermes_yaml.safe_load":
+          "c93d3925742202d4bfd852e08b1bafa536d3f57ebc8d9d6dd5a40381f2de3ffa",
+        "tools.delegate_tool_config._cfg":
+          "78b2a1b2f441fb6965da7e502f924d95ddf307e5071d14cacdbc550302d125b0",
+        "tools.delegate_tool_config._child_reasoning":
+          "254c39e0c5c73e130be5aa0f06ac3b6c74e07f0b7346c0a76be854e3960906d1",
+        "tools.delegate_tool_config._load_config":
+          "9106cd1ba72291a74ce323183ce2f24436e7bc3073925ef406e6ee81ec48e4cb",
+        "tools.delegate_tool_routes._active_provider":
+          "09d73d854c6fdcb877f16e2c7968d11f2baf3b6ebf74bba7c32f9e3a1e4df400",
+        "tools.delegate_tool_routes._clean_route":
+          "766bb69069bfbbe674666b6bd34ad2426db6e79fb691372c9ab9da3402a28c84",
+        "tools.delegate_tool_routes._declared_parameters":
+          "944f7b00a4c35db9a294399d8f2fb6f8e5f8cb0b10d2ed1ea66a51ecd945f705",
+        "tools.delegate_tool_routes._param_error":
+          "7c7129fc41c876809253bb0fe1ca0e730d99926bcda27c753c64db3b1ef0df3d",
+        "tools.delegate_tool_routes._route_one":
+          "f16950d2cad373ee70497f35d06d06c05264902a43d8d9ac20fce5d08459f0e7",
+        "utils._atomic_write":
+          "3200be7d40df35323ab55da29dde05b1ba2194aa673c4d09294cfc68d5a14ae5",
+        "utils._mode_for_write":
+          "1e5b82be00bc938ca1807b948eb76216a265e6077875cda81a8fc855cea6d512",
+        "utils._preserve_file_mode":
+          "027ba90fd7b352fa0990f4a1422a9f43be138e989017ef6b23d7cec3786f9896",
+        "utils._roundtrip_dump":
+          "5d90daf354de038cc6bcf71ae3c60c9779e04e96754a6431114e5f6bea2f1477",
+        "utils._roundtrip_load":
+          "45b43337a7d39cb8eb493e5b8e358972ab3304a7714af93ee600bbf9ae3a61a1",
+        "utils.atomic_roundtrip_yaml_save":
+          "5c6d49b9a20abafcb7b6fc30ca6784e4fe1ed1921f9e202e3ddb8ae7559079e0",
+        "utils.atomic_roundtrip_yaml_update":
+          "ba471231864a8e457168e07060c438ad0d2c39f76e45ac3b698f89755c0783cf",
+        "utils.base_url_host_matches":
+          "1869c4d607a48f48aca2f121df0c61a8eee71f4a12d069877482c84ba3b6d259",
+        "utils.base_url_hostname":
+          "441b45bcb43f1a794dba096a712b745f7acd48bd298c83bd7c5cd981e540d01e",
+        "utils.base_url_path":
+          "1e25c291341b5d1cb6790bb273a96ca04cb2866d0b00da6c8c565b63dba74454",
+        "utils.fast_safe_load":
+          "04387bef8bae1012e484d61564367967a8064365488f30832f9498a98ab67d73"
+      },
+      "constants": {
+        "agent.models_dev.PROVIDER_TO_MODELS_DEV": {
+          "ai-gateway": "vercel",
+          "alibaba": "alibaba",
+          "anthropic": "anthropic",
+          "cohere": "cohere",
+          "deepseek": "deepseek",
+          "fireworks": "fireworks-ai",
+          "gemini": "google",
+          "google": "google",
+          "groq": "groq",
+          "huggingface": "huggingface",
+          "kilocode": "kilo",
+          "kimi": "kimi-for-coding",
+          "kimi-coding": "kimi-for-coding",
+          "kimi-coding-cn": "kimi-for-coding",
+          "meta": "meta",
+          "meta-ai": "meta",
+          "minimax": "minimax",
+          "minimax-cn": "minimax-cn",
+          "minimax-oauth": "minimax",
+          "mistral": "mistral",
+          "moonshot": "kimi-for-coding",
+          "novita": "novita-ai",
+          "nvidia": "nvidia",
+          "ollama-cloud": "ollama-cloud",
+          "openai": "openai",
+          "openai-api": "openai",
+          "openai-codex": "openai",
+          "opencode-go": "opencode-go",
+          "opencode-zen": "opencode",
+          "openrouter": "openrouter",
+          "perplexity": "perplexity",
+          "qwen-oauth": "alibaba",
+          "stepfun": "stepfun",
+          "togetherai": "togetherai",
+          "xai": "xai",
+          "xai-oauth": "xai",
+          "xiaomi": "xiaomi",
+          "zai": "zai"
+        },
+        "gateway.session_policy.FOLLOW_AGENT_KEYS": [
+          "reasoning_effort",
+          "reasoning_overrides",
+          "service_tier",
+          "disabled_toolsets",
+          "coding_context"
+        ],
+        "gateway.session_policy.FOLLOW_SECTIONS": [
+          "model",
+          "providers",
+          "custom_providers",
+          "fallback_providers",
+          "fallback_model",
+          "model_aliases",
+          "platform_toolsets"
+        ],
+        "hermes_cli.auth._PROVIDER_ALIASES": {
+          "aci": "actual",
+          "actual-computer": "actual",
+          "actualcomputer": "actual",
+          "aigateway": "ai-gateway",
+          "alibaba-coding": "alibaba-coding-plan",
+          "alibaba_coding": "alibaba-coding-plan",
+          "alibaba_coding_plan": "alibaba-coding-plan",
+          "amazon": "bedrock",
+          "amazon-bedrock": "bedrock",
+          "arcee-ai": "arcee",
+          "arceeai": "arcee",
+          "aws": "bedrock",
+          "aws-bedrock": "bedrock",
+          "chatgpt": "openai-codex",
+          "chatgpt-codex": "openai-codex",
+          "claude": "anthropic",
+          "claude-code": "anthropic",
+          "glm": "zai",
+          "gmi-cloud": "gmi",
+          "gmicloud": "gmi",
+          "go": "opencode-go",
+          "google": "gemini",
+          "google-ai-studio": "gemini",
+          "google-gemini": "gemini",
+          "grok": "xai",
+          "grok-oauth": "xai-oauth",
+          "hf": "huggingface",
+          "hugging-face": "huggingface",
+          "huggingface-hub": "huggingface",
+          "kilo": "kilocode",
+          "kilo-code": "kilocode",
+          "kilo-gateway": "kilocode",
+          "kimi": "kimi-coding",
+          "kimi-cn": "kimi-coding-cn",
+          "kimi-for-coding": "kimi-coding",
+          "llama-cpp": "custom",
+          "llama.cpp": "custom",
+          "llamacpp": "custom",
+          "lm-studio": "lmstudio",
+          "lm_studio": "lmstudio",
+          "lmstudio": "lmstudio",
+          "local": "custom",
+          "mimo": "xiaomi",
+          "minimax-china": "minimax-cn",
+          "minimax-global": "minimax-oauth",
+          "minimax-portal": "minimax-oauth",
+          "minimax_cn": "minimax-cn",
+          "minimax_oauth": "minimax-oauth",
+          "moonshot": "kimi-coding",
+          "moonshot-cn": "kimi-coding-cn",
+          "ollama": "custom",
+          "ollama_cloud": "ollama-cloud",
+          "opencode": "opencode-zen",
+          "opencode-go-sub": "opencode-go",
+          "qwen-cli": "qwen-oauth",
+          "qwen-oauth": "qwen-oauth",
+          "qwen-portal": "qwen-oauth",
+          "step": "stepfun",
+          "stepfun-coding-plan": "stepfun",
+          "tencent": "tencent-tokenhub",
+          "tencent-cloud": "tencent-tokenhub",
+          "tencent-lkeap": "tencent-tokenplan",
+          "tencentmaas": "tencent-tokenhub",
+          "tokenhub": "tencent-tokenhub",
+          "tokenplan": "tencent-tokenplan",
+          "vercel": "ai-gateway",
+          "vercel-ai-gateway": "ai-gateway",
+          "vllm": "custom",
+          "x-ai": "xai",
+          "x-ai-oauth": "xai-oauth",
+          "x.ai": "xai",
+          "xai-grok-oauth": "xai-oauth",
+          "xai-oauth": "xai-oauth",
+          "xiaomi-mimo": "xiaomi",
+          "z-ai": "zai",
+          "z.ai": "zai",
+          "zen": "opencode-zen",
+          "zhipu": "zai"
+        },
+        "hermes_cli.auth_constants.DEFAULT_CODEX_BASE_URL": "https://chatgpt.com/backend-api/codex",
+        "hermes_cli.model_switch._PROVIDER_API_MODE_OVERRIDES": {
+          "routes": {},
+          "source_sha256":
+            "b123918773dfc0aa431269602a29c1e603e9f5eb5836df3b9400b303e4446c83"
+        },
+        "hermes_cli.providers.TRANSPORT_TO_API_MODE": {
+          "anthropic_messages": "anthropic_messages",
+          "bedrock_converse": "bedrock_converse",
+          "codex_responses": "codex_responses",
+          "openai_chat": "chat_completions"
+        },
+        "hermes_cli.providers._RESPONSES_NATIVE_HOSTS": [
+          "api.meta.ai",
+          "api.router.com"
+        ],
+        "hermes_cli.runtime_provider._ANTHROPIC_DEFAULT_BASE_URL": "https://api.anthropic.com",
+        "hermes_cli.runtime_provider._HOST_MANDATED_API_MODES": {
+          "api.actual.inc": "chat_completions",
+          "api.anthropic.com": "anthropic_messages",
+          "api.meta.ai": "codex_responses",
+          "api.router.com": "codex_responses",
+          "api.x.ai": "codex_responses"
+        },
+        "hermes_cli.runtime_provider._OAUTH_RUNTIME_PROVIDERS": {
+          "routes": {
+            "openai-codex": {
+              "api_mode": "codex_responses",
+              "default_base_url": "",
+              "resolve": [
+                "Lambda",
+                {
+                  "args": [
+                    "arguments",
+                    {}
+                  ],
+                  "body": [
+                    "Call",
+                    {
+                      "func": [
+                        "Name",
+                        {
+                          "ctx": [
+                            "Load",
+                            {}
+                          ],
+                          "id": "resolve_codex_runtime_credentials"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "source_sha256":
+            "86d442621fdccb9bb68e1ae307ad034ee83c448e926a6f23a00129dff6a9fffb"
+        },
+        "hermes_cli.runtime_provider._POOL_ENTRY_SIMPLE_MODES": {
+          "routes": {
+            "openai-codex": {
+              "api_mode": "codex_responses",
+              "base_url": "https://chatgpt.com/backend-api/codex"
+            }
+          },
+          "source_sha256":
+            "bfc8b7a3b7a91381189f19d8f903436038eb6fa467e313600ebef12709ebdbb5"
+        },
+        "hermes_cli.runtime_provider_custom._DIRECT_API_BASE_URLS": {
+          "openai": "https://api.openai.com/v1"
+        },
+        "hermes_constants.VALID_REASONING_EFFORTS": [
+          "minimal",
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max",
+          "ultra"
+        ],
+        "hermes_plugins.advanced_delegation.model_map.BACKEND": "model_map",
+        "hermes_plugins.advanced_delegation.model_map.DAYBREAK_KEY": "daybreak",
+        "hermes_plugins.advanced_delegation.model_map.PARAMETER": "option",
+        "hermes_plugins.advanced_delegation.model_map.ROUTE_FIELDS": [
+          "provider",
+          "model",
+          "base_url",
+          "api_key",
+          "api_mode",
+          "reasoning_effort",
+          "service_tier"
+        ],
+        "hermes_plugins.advanced_delegation.model_map.SETTINGS_PATH": "delegation.backends.model_map"
+      },
+      "label": "Docker hqr-s1-test; HQR-38 source requalified by read-only inspection, installed run pending",
+      "allow_revisionless_match": true,
+      "source_provenance": {
+        "recipe": "tests/installed/Dockerfile",
+        "image_label": {
+          "hqr.host": "3b421578588243f920886e6fe79a6faa87ea026e"
+        },
+        "tarball_sha256":
+          "2525046f165880c22f177f2214c8da3e26c58cb0aeab5bd09aad940556538897"
+      },
+      "revision": "3b421578588243f920886e6fe79a6faa87ea026e",
+      "session_store_qualified": false,
+      "hooks_qualified": [],
+      "advanced_delegation": {
+        "version": "1.1.0",
+        "ref": "13b2c1c9c8204bf333df240b2aacf98c3e6250b7"
+      }
+    }
+  ]
+}

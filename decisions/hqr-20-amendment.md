@@ -228,13 +228,78 @@ O Observe mostra as quatro variantes lado a lado; Guilherme aprova o mapa e esco
 | Não usar caixas de perguntas | Um plugin pode pedir escolha ao usuário | O plugin não usa perguntas interativas; tudo passa por comandos e configuração. |
 | Merge e push após revisão aprovada; produção com gates próprios | A instalação da S2 no Hermes de trabalho depende de uma revisão publicada | Instalar só a revisão revisada e publicada, com backup, readback e rollback; o piloto em Observe vale por D1. |
 | Patches locais do Hermes e procedimento de conferência a cada `hermes update` | O plugin usa funções internas de configuração e troca de modelo | O plugin confere essas funções ao carregar e suspende o Auto, sem escrever, se alguma mudar. |
-| Profiles de outras sessões, como os da WRXN | Auto por profile poderia alcançar profiles alheios | Só o profile `default` é inscrito; outros dependem de pedido próprio na S4. |
+| Profiles de outras sessões e projetos | Auto por profile poderia alcançar profiles alheios | Só o profile `default` é inscrito; outros dependem de pedido próprio na S4. |
 | Fable só por escolha explícita | Mapa com Fable | `models.fable` desligado por padrão; ligar é a escolha explícita. |
 | S1: instalação separada de habilitação e OFF por padrão | Nenhuma | Mantidas. |
 
 Limite que contraria parte de D2: sessões "Bot Chat" seguem o modelo do profile a cada turno por desenho nativo (`follow_profile_config`), então mudariam de modelo no turno seguinte a uma decisão, não só numa sessão nova.
 As demais sessões de conversa fixam o modelo ao serem criadas (`tui_gateway/methods_session.py`), como Guilherme pediu.
 Por isso a S3 só escreve o modelo da conversa depois que Guilherme aceitar essa exceção ou de uma correção nativa qualificada (HQR-24); sem isso, `consumers.conversation` fica sem efeito e o status explica.
+Guilherme aceitou essa exceção em 2026-11-16 (D8, seção 17).
+
+## 17. Decisões de 2026-11-16 para a S3
+
+Respostas de Guilherme em 2026-11-16, depois do aceite da S2; esta seção prevalece sobre os trechos citados das seções 3, 15, 16 e do mapa de cenários.
+
+| ID | Assunto | Decisão de Guilherme | Trecho afetado |
+|---|---|---|---|
+| D8 | Bot Chat aberta (HQR-24) | Aceita: a conversa aberta em `follow_profile_config` pode trocar de modelo no turno seguinte a uma decisão. | Seção 16, último parágrafo: a S3 escreve o modelo da conversa; cenário C3. |
+| D9 | Mapa de D5 | Aprovado o mapa `base` com esforço próprio por provedor, escolhido por benchmark e custo por tarefa da Artificial Analysis; Haiku só em extract; conversa Codex em `gpt-6.1-sol` xhigh. A tabela está no [plano da S3](s3-plan.md#mapa-aprovado). | Seção 15: o esforço deixa de ser o mesmo nos dois lados; variantes com Fable e Astra continuam não aprovadas. |
+| D10 | Histerese | Mantida em 10%. | Nenhum. |
+| D11 | Política da conversa no Hermes de trabalho | `conversation.policy = pacing`, gravado no subtree do plugin em 2026-11-16; o padrão do produto continua `principal_first`. | Seção 16, primeira linha: no Hermes de trabalho, a conversa pode ir para Claude mesmo com o Codex elegível. |
+| D12 | Cron (achado R1 da revisão do plano) | O cron sem modelo próprio usa a conversa; o plugin não escreve chaves `cron.*`. | Seções 3, 4 e 13: `consumers.cron` deixa de gravar chaves globais; AC-18 e C7 passam a ser provados pela conversa; C9 continua visível no status. |
+| D13 | Escolha de modelo por job de cron | O agente que cria o job analisa a tarefa e escolhe o modelo; sem escolha, o job segue a conversa. | Pin completo (provider, modelo e esforço) fora do Auto (C8); regra na skill compartilhada `cron-model-choice`. |
+| D14 | Teste protegido `tests/integration/test_export.py`, linha 23 | Aprovada a mudança para exigir exatamente os hooks declarados pela S3. | Nenhum outro teste protegido. |
+| D15 | Limites residuais da recuperação e do registro de idade (achados R3 e R6) | Aceitos: uma mistura exata de valores anteriores e alvos deixada por edição humana depois de uma queda é completada; no subagente, a decisão usada é correlacionada pelo horário, e uma aplicação de outro processo no mesmo instante pode apontar a geração errada. | AC-19, AC-20 e AC-22, conforme os ajustes técnicos abaixo. |
+| D16 | Registro sem vínculo de decisão (achado R6 da revisão 3) | Aceito: quando não há vínculo entre a tarefa e a geração de decisão, o registro mostra "geração indeterminada", sem idade. | AC-22, conforme o ajuste técnico abaixo. |
+| D17 | Janela de segurança do registro de idade (achado R6 da revisão 5) | Opção A: com uma decisão aplicada nos 60 s antes da criação da sessão, o registro é "geração indeterminada"; aceito o limite residual de o host levar mais de 60 s entre ler a configuração e gravar o horário. | AC-22, conforme o plano. |
+
+O mapa foi escolhido em preço de API por tarefa de benchmark, não em franquia de assinatura; ele define o modelo de cada lado, e a escolha do lado continua pela folga de cota da seção 6.
+
+Ajustes técnicos propostos pelo agente depois da revisão 1 do [plano da S3](s3-plan.md#revisão), sujeitos a revisão e sem decisão de Guilherme:
+
+- Seção 4: a conversa não passa por `switch_model`, porque a resolução nativa devolve credenciais; o plugin grava `model.default`, `model.provider`, `model.base_url`, `model.api_mode` e `agent.reasoning_effort` pela escrita nativa, na forma de `model_selection_config_updates`, e recusa inscrever um bloco `model` com credencial ou ponteiro de credencial.
+- Seção 15 e cenário B4: na S3, Astra e Fable continuam inelegíveis mesmo quando disponíveis, porque suas variantes não foram aprovadas (D9); o resultado positivo de B4 fica para a fatia que aprovar e qualificar a variante.
+- AC-23 e E1: com o plugin desabilitado ou sem carregar, o diagnóstico é o nativo (`hermes plugins list`) e `mode: auto` permanece no subtree; o status do plugin relata a ausência quando ele carrega de novo, a partir de uma marca no diretório de dados.
+- Seção 16, patches locais: a conferência das funções internas usa a impressão digital do código-fonte por host qualificado, não só a assinatura.
+- Esforço do cron: o host não tem esforço global próprio para o cron; ele usa o mesmo caminho da conversa, o que levou à decisão D12.
+- Seção 13, AC-24 e cenário D4, por D12: `consumers.cron` fica aceito e sem efeito; o status explica que o cron segue a conversa e mostra a origem de modelo, provider e esforço do cron.
+- Seção 16, linha das rotas de subagente: o grupo é só `provider`, `model`, `base_url`, `api_mode` e `reasoning_effort`; fallbacks e opções próprias não são escritos, comparados nem restaurados.
+- AC-19 e AC-20: na recuperação, um grupo com todas as chaves no valor anterior descarta a escrita pendente; uma mistura exata de valores anteriores e alvos é tratada como escrita interrompida e completada, mesmo se vier de uma edição humana; limite aceito por Guilherme (D15).
+- AC-22: a idade registrada é a da geração comprovada pelo horário de criação e pela configuração que o host grava para a sessão, conforme o plano; sem essa evidência, ou com uma decisão aplicada nos 60 s antes da criação, o registro mostra "geração indeterminada" sem idade, aceito por Guilherme (D16, D17).
+
+## 18. Correção do preview S3 em 2026-11-16 (D18)
+
+Guilherme autorizou em 2026-11-16 a correção dos três defeitos de preview: rejeição dos defaults nativos de rota, ausência dos grupos bloqueados e exibição do mapa antigo.
+Essa autorização cobre implementação e testes locais, sem publicação, instalação ou mudança no Hermes de trabalho.
+
+- D18 mantém a projeção fechada de cinco campos e aceita `base_url`/`api_mode` ausentes ou vazios, ou exatamente iguais aos defaults nativos do provedor atual (`openai-codex` ou `anthropic`).
+- Endpoint ou modo diferente, inclusive o default do outro provedor, continua excluindo o grupo; status e explain mostram somente os nomes dos campos recusados.
+- Na aplicação, conversa e opções de subagente recebem os defaults nativos do provedor escolhido; um default inexistente seria removido, como `None` em `model_selection_config_updates` no backend de arquivo.
+- A linha de base conserva presença e valor originais; OFF e recuperação restauram a projeção exata, sem deixar endpoint ou modo do provedor anterior.
+- Na recuperação, a mistura anterior/alvo de D15 pode incluir provider, endpoint e modo; somente as células validadas do diário admitem essa mistura, nunca um endpoint customizado.
+- A fonte sem credenciais inclui os builders do caminho normal: `_OAUTH_RUNTIME_PROVIDERS`/`_resolve_oauth_runtime`, `_anthropic_env_runtime` e `_POOL_ENTRY_SIMPLE_MODES`/`_pool_entry_mode_and_url`, além dos resolvers explícitos e das URLs públicas em `auth_constants`/`runtime_provider`.
+- R1 vincula também a seleção em `resolve_runtime_provider`/`_ladder_rungs`, os builders Codex de `auth_codex`, os guards de provider canônico, os reexports ativos e a formação final de `base_url`/`api_mode` em `model_switch`.
+- As tabelas com lambdas/construtores recebem hash da atribuição e projeção inerte dos campos públicos dos dois providers; nenhum construtor, import nativo, lambda ou leitor de credencial é executado para medi-las.
+- A comparação das tabelas carregadas não pode aproveitar uma atribuição intacta em disco para ocultar alteração de modo, endpoint, resolver OAuth ou override dos providers geridos.
+- R3 localiza a lambda ativa no AST do arquivo completo pelo filename e pela primeira linha do código; lambdas inline de dicionários multilinha são aceitas, mas posições ambíguas e substituições de resolver são recusadas.
+- A tabela `_PROVIDER_ALIASES` também é vinculada na fonte e na versão carregada; o espelho recusa uma tabela requalificada que redirecione um dos providers geridos.
+- `quota_router/routes.py` espelha apenas os defaults públicos e exige igualdade com URLs, transportes e modos das tabelas qualificadas; atualizar só o ledger sem atualizar o espelho não qualifica Auto.
+- R2 recusa `model.openai_runtime` não vazio em conversa e subagentes, independentemente do provider atual ou do valor escolhido, pois o overlay global nativo pode mudar o modo do destino Codex depois da resolução.
+- A recusa vale na prévia Observe, na inscrição e antes de cada escrita, inclusive recuperação e OFF; diagnóstico e estado guardam somente o nome `model.openai_runtime`.
+- Campo ausente, null ou string vazia, inclusive só espaços, não ativa essa recusa; outros tipos são recusados de forma conservadora.
+- Nenhum resolver de runtime ou `switch_model` é chamado para obter os defaults; a regra R2 continua valendo.
+- `advanced-delegation` copia os campos não vazios de `ROUTE_FIELDS` para a rota; as opções recebem os mesmos defaults da conversa, sem mudar descrição, fallbacks ou campos fora da projeção.
+- Observe e Auto usam os mesmos gates por papel: precondições, restauração de null, inscrição, divergência, mapa, catálogo, consumidor, profile, settings e compatibilidade/backend.
+- `routing_blocks`, `blocked_fields` e `block_reasons` distinguem exclusão por campo de outros gates; um grupo bloqueado não publica `would_change`, `proposal_change` nem uma escolha acionável.
+- A revisão da preferência e a rota esperada de G2/G8 incluem a presença e os cinco campos; uma sincronização apenas de endpoint/modo também aparece na prévia pelos nomes dos campos.
+- Depois de OFF concluído, Observe antecipa a nova inscrição do próximo Auto; exclusões da inscrição anterior aparecem apenas como histórico.
+- Explain mostra `settings.roles`, o mapa aprovado realmente em uso, com o mapa D9 preservado e cron seguindo a conversa sem linha própria.
+- A qualificação JSON informa os fingerprints medidos e distingue revisão legível, revisão declarada, fonte qualificada, disponibilidade de Auto e prova instalada.
+
+Depois da correção R1, as duas entradas de fonte foram rederivadas por leitura: 134 funções e 18 constantes por host na revisão `3b421578588243f920886e6fe79a6faa87ea026e`, sem mudar a qualificação negativa da fonte de sessão ou dos hooks.
+A rechecagem acrescentou `_PROVIDER_ALIASES`, medido por AST nas duas fontes e idêntico entre elas; o conjunto atual tem 134 funções e 19 constantes, preservando os fingerprints anteriores.
+O [registro da correção](s3-delivery.md#correção-dos-três-defeitos-de-preview-s3-2026-11-16) separa os testes locais da repetição instalada ainda necessária.
 
 ## Reference definitions
 

@@ -20,7 +20,7 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(manifest["kind"], "standalone")
         self.assertEqual(manifest["manifest_version"], 2)
         self.assertEqual(manifest["python_dependencies"], [])
-        self.assertEqual(manifest["provides_hooks"], [])
+        self.assertEqual(manifest["provides_hooks"], ["on_session_open", "on_kanban_dispatch_tick", "subagent_start", "on_session_start", "api_request_error"])
         names = subprocess.check_output(["git", "ls-files", "-z"], cwd=ROOT).decode().split("\0")
         names = sorted(set(filter(None, names)) | {"plugin.yaml"})
         self.assertEqual(check_lines(ROOT, names), [])

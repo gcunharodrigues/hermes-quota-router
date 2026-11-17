@@ -1,9 +1,11 @@
+# Implements decisions/product-spec.md, sections 7/8 and AC-11; decisions/s1-delivery.md, "Incremento implementado".
 """Validate the operator's explicit declaration without installing or promoting it."""
 import re
 
 ORIGIN = "gcunharodrigues/hermes-quota-router"
 
 
+# decisions/product-spec.md, AC-11: an explicit channel/revision declaration is not installed-byte verification.
 def selection(value):
     if value is None:
         return None, "unknown"

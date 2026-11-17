@@ -32,7 +32,7 @@ Branch `hermes/2026-11-15-hqr-s2`.
 
 ## Ensaio instalado no alvo de teste
 
-Alvo `hqr-s1-test` (rede bridge, volume próprio, sem credenciais), candidato `214f028`, rollback `ad3e180`; recibos fora do Git, em `.runtime/`.
+Alvo `hqr-s1-test` (rede bridge, volume próprio, sem credenciais), candidato `214f028`, rollback `ad3e180`; os resultados estão resumidos nesta seção, sem registros brutos distribuídos.
 
 - Run 1: parou no passo 8 por erro do runner, que comparava as configurações do plugin pela chave de topo; o host guarda `credits.anthropic` como árvore aninhada. Corrigido em `0a72348`.
 - Run 2: parou no passo 14, porque o `.env` de modelo do profile de teste criado no passo 10, só com comentários, caiu no controle de arquivos com nome de credencial. O runner passou a apagar o profile de teste em `2dcd489`; o controle não foi afrouxado.
@@ -66,38 +66,44 @@ Driver `tests/installed/s2_pilot.py` (`f6abf89`), candidato `214f028`, profile `
   - Checkout do Hermes e `uv.lock` sem mudança; só a pasta do plugin foi acrescentada.
 - Restart do gateway autorizado por Guilherme em 2026-11-15 e feito com drenagem nativa (`hermes gateway restart`, sem `--interrupt`); serviço ativo de novo, sem erro do plugin no log.
 - Depois do restart, um consumidor novo carrega o plugin da pasta instalada, em Observe, versão `0.2.0rc1`, sem restart pendente; as leituras reais seguem válidas e a recomendação é a mesma, só como proposta.
-- DEMO, primeira tentativa: Guilherme rodou `/quota-router status` no app e recebeu JSON, difícil de ler; pediu saída para humanos com base na pesquisa de legibilidade da sessão do relatório WRXN.
+- DEMO, primeira tentativa: Guilherme rodou `/quota-router status` no app e recebeu JSON, difícil de ler; pediu saída para humanos para tornar a conclusão e os limites legíveis sem interpretar JSON.
 - Saída legível em `quota_router/render.py`, com JSON só por `--json`; prévia com as leituras reais aprovada para seguir.
 - Aprovação de Guilherme em 2026-11-15 para mudar os testes protegidos da S1 só no pedido de JSON: `tests/unit/test_modes.py`, `tests/unit/test_failures.py` e `tests/integration/test_export.py` passam a chamar o comando com ` --json`, e o probe de `tests/installed/lifecycle.py` acrescenta ` --json`; nenhuma asserção muda. Aprovou também publicar a nova versão e reinstalar no Hermes de trabalho com novo restart do gateway.
 - `tests/unit/test_default.py`, `tests/unit/test_concurrent.py` e `tests/unit/test_identity.py`, também da S1, liam o JSON e tinham ficado fora da lista; Guilherme aprovou a mesma mudança para eles (seis chamadas, sem mudar asserção).
-- Revisão `deleg_fa262031` de `545fcd0`: NO-GO com oito achados.
+- Revisão independente, rodada 1 de `545fcd0`: NO-GO com oito achados.
 O probe instalado da S1 enviava `--json` também ao rollback S1, que recusa o argumento; o texto declarava créditos disponíveis com limite de gastos atingido ou não verificável; `explain` escondia configuração inválida e decisão incompleta; janelas por modelo e limites configurados abaixo de 100% ficavam sem nome; a histerese aparecia fixa em 10%; mapa parcial aparecia inteiro como aprovado; faltavam idade da leitura, mapas por papel e a recomendação geral sem inventário; pins só de endpoint eram descritos errado.
 - Correções: `tests/installed/lifecycle.py` voltou aos bytes de `82e888d`; os runners S2 usam `tests/installed/s2_probe.py`, derivado do probe S1, que só pede `--json` quando o plugin carregado tem `render.py`, sem comando extra; o texto segue a política de créditos, nomeia janela e limite, usa a histerese efetiva, separa aprovado de proposto e mostra os campos que faltavam.
 Testes novos em `tests/unit/test_s2_render.py` e `tests/harness/test_s2_probe_harness.py`.
-- Re-revisão `deleg_96dfed6d` de `7c7f3b5`: NO-GO com três achados médios: créditos apareciam disponíveis quando a política rejeitava a leitura por datas inconsistentes ou negação contraditória do provedor; faltava a fonte da leitura; `explain` atribuía à cota semanal geral um bloqueio da cota semanal do Opus.
+- Re-revisão independente, rodada 2 de `7c7f3b5`: NO-GO com três achados médios: créditos apareciam disponíveis quando a política rejeitava a leitura por datas inconsistentes ou negação contraditória do provedor; faltava a fonte da leitura; `explain` atribuía à cota semanal geral um bloqueio da cota semanal do Opus.
 - Correções: o texto usa o veredito de conta da própria política (`policy.eligibility`) e diz que nem a franquia nem os créditos serão usados; mostra a fonte geral e a de cada leitura; a política registra `blocked_window` (tipo e família da janela que bloqueou), campo aditivo usado só no texto.
-- Re-revisão `deleg_75dbe65d` de `22295ef`: GO, sem achados bloqueantes; 109 testes.
+- Re-revisão independente, rodada 3 de `22295ef`: GO, sem achados bloqueantes; 109 testes.
 - Publicação (aprovada por Guilherme): candidato `6abf28f04d53cba1eb7a520ef494e4cd3867363d`, árvore de `22295ef` sobre `214f028`, na branch remota nova `hermes/2026-11-15-hqr-s2-readable`; `main` sem mudança; histórico local não publicado.
 - Ensaio instalado run 4 (`hqr-s1-test`, candidato `6abf28f`, rollback `ad3e180`): 15 de 15 passos; os recibos mostram `--json` só nas revisões com `render.py`.
 - Troca no Hermes de trabalho: backup datado com SHA256; `214f028` desligado (OFF), desabilitado e removido sem mudar chaves fora do plugin; piloto `s2_pilot.py --branch hermes/2026-11-15-hqr-s2-readable` com `6abf28f`: 9 de 9 passos; plugin em Observe.
 O piloto ganhou `--branch`, com a branch anterior como padrão.
 - Gateway reiniciado sem `--interrupt`, com a autorização de Guilherme; consumidor novo devolve o `status` em texto.
-- DEMO, segunda tentativa: Guilherme achou o texto bom, mas leu que o plugin não lia a Anthropic e lembrou que a conversa usa Opus.
-Verificação: a leitura da Anthropic funciona (semana 34%, quatro leituras seguidas); a API da Anthropic não envia janela de 5 h nem semana própria do Opus nesta conta (campos nulos), e o Opus consome a semana geral; a lista nova `limits` traz só a semana do Fable, que o leitor do Hermes não lê (HQR-23); o leitor do Hermes não repassa os créditos da Anthropic; o modelo da conversa mostrado é o padrão do profile, não o da sessão aberta.
+- DEMO, segunda tentativa: o texto foi aprovado, mas o status dizia que o plugin não lia a Anthropic, o que contradizia a leitura esperada.
+Verificação: a leitura nativa pode trazer somente a semana geral, sem janela de 5 h nem semana própria do Opus; o plugin não infere uma janela ausente nem recebe a semana do Fable ou os créditos da Anthropic (HQR-23).
+O modelo da conversa mostrado é o padrão do profile, não o da sessão aberta.
 - Texto corrigido: a linha do Claude explica a falta das janelas e quem não informa os créditos; a conversa aparece como modelo padrão do profile para sessões novas; `str.capitalize` deixava de minúscula "Hermes" e "Claude" e foi trocado.
-- Revisão `deleg_8de0afbc` de `34f505d`: NO-GO num achado médio: `--branch` aceitava padrões, que `git ls-remote` expande, e a checagem olhava só o primeiro SHA.
+- Revisão independente do piloto, rodada 1 de `34f505d`: NO-GO num achado médio: `--branch` aceitava padrões, que `git ls-remote` expande, e a checagem olhava só o primeiro SHA.
 Correção: o nome da branch precisa ser literal, e a checagem exige exatamente uma linha com o SHA e o ref completo; harness `tests/harness/test_s2_pilot_harness.py`.
-- Re-revisão `deleg_c2eba583` de `8809e3f`: GO; 113 testes.
+- Re-revisão independente do piloto, rodada 2 de `8809e3f`: GO; 113 testes.
 - Com o sim de Guilherme: candidato `2a94c81604fb202d43fe610f4507d2e96f4310a6` (árvore de `8809e3f` sobre `6abf28f`) publicado em `hermes/2026-11-15-hqr-s2-readable`; ensaio instalado run 5: 15 de 15; troca no Hermes de trabalho com backup datado, remoção de `6abf28f` e piloto `s2_pilot.py`: 9 de 9; plugin em Observe; consumidor novo devolve `status`, `explain` e `config` em texto.
-- Processos que guardam o plugin antigo na memória: gateway reiniciado; backend do app desktop encerrado com SIGTERM; serviço do dashboard, que atende o app do iPhone, reiniciado depois da resposta.
-- DEMO, terceira tentativa, no app desktop do Mac: o Claude apareceu como "leitura indisponível" e a recomendação foi Codex com créditos.
+- Processos que guardam o plugin antigo na memória: gateway, backend do app desktop e serviço do dashboard reiniciados depois da troca.
+- DEMO, terceira tentativa, no app desktop: o Claude apareceu como "leitura indisponível" e a recomendação foi Codex com créditos.
 Causa medida: a API de uso da Anthropic responde 429 com `retry-after: 300` depois de cinco consultas seguidas; o Hermes a consulta depois de cada turno, e o leitor nativo devolve `None` sem dizer o motivo.
 O teste de rajada que confirmou o limite também gastou a cota de consultas por cinco minutos.
 - Primeira correção (`f625623`): usar a última leitura guardada pelo Hermes (`cached_account_usage`) quando a busca falha.
-Revisão `deleg_21b363ea`: NO-GO (HQR-CACHE-01, alto): a vaga legada do cache não está ligada à conta selecionada agora; depois de troca de conta ou logout, a leitura de outra conta passaria como válida, e só lendo credenciais o plugin provaria a ligação.
+Revisão independente do cache, rodada 1: NO-GO (HQR-CACHE-01, alto): a vaga legada do cache não está ligada à conta selecionada agora; depois de troca de conta ou logout, a leitura de outra conta passaria como válida, e só lendo credenciais o plugin provaria a ligação.
 Também (HQR-CACHE-02, baixo): o texto e a documentação apresentavam o limite de cinco minutos como contrato, e `None` não identifica o motivo.
 - Correção final: o fallback saiu; o texto da leitura sem resposta da Anthropic cita o limite de consultas como causa possível e o 300 s como resposta observada; a ligação conta–leitura sem token vai ao backlog do core (HQR-25).
-- Pendente: revisão, publicação, ensaio, reinstalação, restarts, DEMO e aceite.
+- Re-revisão independente do cache, rodada 2 de `341e3ce`: GO; 114 testes; o item HQR-25 entrou no backlog.
+- Com o sim de Guilherme: candidato `ad113d95604128fcdf9c446e2c5bd9c75bff0860` (árvore de `1264aaa` sobre `2a94c81`) publicado em `hermes/2026-11-15-hqr-s2-readable`; ensaio instalado run 6: 15 de 15; troca no Hermes de trabalho com backup datado e piloto: 9 de 9.
+- Decisão de Guilherme em 2026-11-16: `limits.reading_max_age_s` = 300 no Hermes de trabalho, gravado pelo comando do plugin.
+- Restarts: gateway, dashboard e backend do app desktop.
+- DEMO e aceite: Guilherme aceitou a S2 em 2026-11-16, no candidato `ad113d9` instalado em Observe no Hermes de trabalho.
+O aceite não autoriza merge na `main`, release nem a S3.
 - Leitura de `rate_limit.<janela>.limit_window_seconds` para qualificar a duração das janelas do Codex: aprovada por Guilherme em 2026-11-15 e incluída na lista fechada da seção 14 da emenda; o valor não é guardado nem exibido.
 
 ## Achado durante a execução

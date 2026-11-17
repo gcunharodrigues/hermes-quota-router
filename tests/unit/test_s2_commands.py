@@ -121,7 +121,11 @@ class CommandTests(unittest.TestCase):
     def test_approved_map_makes_decisions_actionable(self):
         reader = reader_for(openai_codex=codex(100), anthropic=claude(21))
         ctx = Context({"mode": "observe"})
-        m, _, _ = manager(ctx, reader)
+        m, _, config = manager(ctx, reader)
+        config['model'].pop('base_url')
+        config['model'].pop('api_mode')
+        m.profile = lambda: 'default'
+        m.compatible = lambda: {'ok': True, 'reasons': []}
         approved = json.loads(m.command("config approve-map base --json"))
         self.assertTrue(approved["ok"])
         roles = ctx.settings["roles"]
@@ -192,7 +196,11 @@ class CommandTests(unittest.TestCase):
     def test_approved_fable_and_astra_maps_stay_gated(self):
         reader = reader_for(openai_codex=codex(100), anthropic=claude(21))
         ctx = Context({"mode": "observe"})
-        m, _, _ = manager(ctx, reader)
+        m, _, config = manager(ctx, reader)
+        config['model'].pop('base_url')
+        config['model'].pop('api_mode')
+        m.profile = lambda: 'default'
+        m.compatible = lambda: {'ok': True, 'reasons': []}
         self.assertTrue(json.loads(m.command("config approve-map fable --json"))["ok"])
         decisions = json.loads(m.command("explain --json"))["decisions"]
         self.assertIsNone(decisions["conversation"]["choice"])
@@ -200,7 +208,11 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(decisions["routes"]["general"]["choice"], "anthropic")
         reader2 = reader_for(openai_codex=codex(10, astra=True), anthropic=claude(100))
         ctx2 = Context({"mode": "observe", "models.astra": True})
-        m2, _, _ = manager(ctx2, reader2)
+        m2, _, config2 = manager(ctx2, reader2)
+        config2['model'].pop('base_url')
+        config2['model'].pop('api_mode')
+        m2.profile = lambda: 'default'
+        m2.compatible = lambda: {'ok': True, 'reasons': []}
         self.assertTrue(json.loads(m2.command("config approve-map astra --json"))["ok"])
         deep = json.loads(m2.command("explain --json"))["decisions"]["routes"]["deep"]
         self.assertIsNone(deep["choice"])
