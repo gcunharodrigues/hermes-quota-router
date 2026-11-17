@@ -58,7 +58,7 @@ O retorno à versão anterior com estado migrado só foi provado em ensaio sint�
 6. A prova de rollback escolhida em D-S4-5 é executada e registrada; com prova no Docker, OFF, restauração e leitura de volta são conferidos com estado migrado.
 7. As notas da release listam os limites abertos: erro de cota real não observado, HQR-23, HQR-25, HQR-27, HQR-28, HQR-36, HQR-40 e a divergência de OFF entre CLI e Desktop.
 8. Árvore e histórico publicados não contêm caminhos, nomes ou identificadores da máquina do operador.
-9. Proveniência e autorização (HQR-06): o SHA40 da release é a revisão revisada e aceita por Guilherme; push, publicação da release e instalação em cada profile têm autorização explícita registrada; a leitura de volta do remoto mostra o rótulo da release apontando para esse SHA40, e a leitura de volta de cada profile mostra esse HEAD instalado.
+9. Proveniência e autorização (HQR-06): o SHA40 da release é a revisão revisada e aceita por Guilherme; push, publicação da release e instalação em cada profile têm autorização explícita registrada; a leitura de volta do remoto mostra o rótulo da release, quando houver, ou o próprio commit apontando para esse SHA40, e a leitura de volta de cada profile mostra esse HEAD instalado.
 
 ## Não objetivos
 

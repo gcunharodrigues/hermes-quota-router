@@ -31,7 +31,7 @@ O volume de chamadas de cada tarefa não foi medido.
 
 - As tarefas incluídas em D-AUX-3 passam a ser grupos do roteador, com a mesma linha de base, diário, releitura, exclusão por edição manual e OFF com restauração exata da S3.
 - A escolha de provedor segue D-AUX-1 e usa a matriz de estados da HQR-38, o que cobre os tipos de assinatura pedidos em HQR-39 para os dois provedores: plano com janela de 5 h e semanal, plano só semanal, estados desconhecidos e créditos.
-- Plano mensal segue a HQR-38: o provedor fica bloqueado com `monthly_plan_unsupported` e as auxiliares não são movidas para ele ([especificação HQR-38](hqr-38-spec.md)).
+- Plano mensal segue a HQR-38: o plano mensal do Codex fica Desconhecido com o motivo `monthly_plan_unsupported` e as auxiliares não são movidas para ele por esse plano ([especificação HQR-38](hqr-38-spec.md)); a HQR-38 não detecta plano mensal da Anthropic.
 - Com Claude esgotado e `credits.anthropic` desligado, nenhuma auxiliar vai para Claude; com os dois esgotados, nenhuma chave muda, como em AC-22.
 - Modelo e esforço do lado Claude seguem o mapa de D-AUX-2, com esforço próprio por provedor como no precedente D9.
 - Nova configuração `consumers.auxiliary`, desligada por padrão, liga e desliga a função como as demais da seção 13 da emenda.
