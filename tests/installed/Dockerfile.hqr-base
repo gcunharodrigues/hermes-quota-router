@@ -1,0 +1,16 @@
+# D-43 test base. No quota-router, operator HOME, or public mirror in the image.
+FROM python@sha256:3fe1a0b6c2d6b2ebb572906cdabeca75aeb558c0c17db5ffefbcf8094871c32b
+LABEL hqr.role="isolated-test-base" hqr.host="3b421578588243f920886e6fe79a6faa87ea026e"
+ENV HOME=/home/hqr HERMES_HOME=/home/hqr/state PYTHONPYCACHEPREFIX=/home/hqr/pycache
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates build-essential && rm -rf /var/lib/apt/lists/*
+COPY host.tar.gz /opt/host.tar.gz
+RUN echo '1dad67b5f8b9e2796ff986b009c3f26e061aa3e98f040752b2a6c707bde87c6a  /opt/host.tar.gz' | sha256sum -c - \
+    && mkdir /opt/hermes && tar -xzf /opt/host.tar.gz --strip-components=1 -C /opt/hermes && rm /opt/host.tar.gz
+WORKDIR /opt/hermes
+RUN python3 -m pm.build_env --source /opt/hermes --out /opt/hermes-venv --python /usr/local/bin/python3 --cache /home/hqr/state/cache/uv
+ENV PATH=/opt/hermes-venv/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+RUN mkdir -p /opt/hqr-receipts /home/hqr/state \
+    && sha256sum pyproject.toml uv.lock pm/lock.json > /opt/hqr-receipts/source-locks.sha256 \
+    && useradd --uid 10001 --create-home --home-dir /home/hqr hqr && chown -R hqr:hqr /home/hqr
+USER 10001:10001
+CMD ["sleep", "infinity"]

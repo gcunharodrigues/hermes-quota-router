@@ -6,7 +6,7 @@
   "kind": "standalone",
   "license": "MIT",
   "python_dependencies": [],
-  "provides_hooks": ["on_session_open", "on_kanban_dispatch_tick", "subagent_start", "on_session_start", "api_request_error"],
+  "provides_hooks": ["on_session_open", "pre_llm_call", "on_session_start", "pre_tool_call", "subagent_start", "api_request_error"],
   "provides_tools": [],
   "config_schema": {
     "mode": {
@@ -27,6 +27,16 @@
       "type": "bool",
       "default": true,
       "description": "Accepted without effect: cron inherits conversation unless pinned"
+    },
+    "consumers.auxiliary": {
+      "type": "bool",
+      "default": false,
+      "description": "Auto writes fixed auxiliary task routes; off by default"
+    },
+    "auxiliary_map": {
+      "type": "dict",
+      "default": {},
+      "description": "Approved auxiliary task map; written by /quota-router config approve-map auxiliary"
     },
     "consumers.conversation": {
       "type": "bool",

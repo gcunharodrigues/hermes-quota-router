@@ -1,6 +1,7 @@
 # Implements decisions/hqr-20-amendment.md, section 16; decisions/s3-plan.md, "Escopo"; README.md, HQR-26.
 """Per-host source fingerprints; source-unavailable and any drift suspend every Auto write."""
 import ast
+from contextvars import ContextVar
 import hashlib
 import importlib
 import inspect
@@ -98,6 +99,52 @@ def fingerprint(function):
     return hashlib.sha256(inspect.getsource(function).encode('utf-8')).hexdigest()
 
 
+# Revisão F1–F5, R2: a cycle qualified the host about 40 times at 0.1 to 0.2 s each, mostly re-reading unchanged
+# sources. Each symbol's digest is kept with what it was computed from (object identity and the stat of every file
+# read), so any swapped object or changed file is fingerprinted again on the very next check.
+_DIGESTS = {}
+_TRACE = ContextVar('quota_router_compat_trace', default=None)
+
+
+def _stamp(path):
+    info = os.stat(path)
+    return (info.st_mtime_ns, info.st_size, info.st_ino)
+
+
+def _loaded_digest(key, value):
+    target = inspect.unwrap(value) if callable(value) else value
+    code = getattr(target, '__code__', None)
+    filename = code.co_filename if code is not None else getattr(sys.modules.get(getattr(target, '__module__', None)), '__file__', None)
+    try:
+        stamp = _stamp(filename)
+    except (OSError, TypeError, ValueError):
+        return fingerprint(value)
+    hit = _DIGESTS.get(key)
+    if hit is not None and hit[0] is value and hit[1] is code and hit[2] == ((filename, stamp),):
+        return hit[3]
+    digest = fingerprint(value)
+    _DIGESTS[key] = (value, code, ((filename, stamp),), digest)
+    return digest
+
+
+def _source_digest(key, path, name, root):
+    hit = _DIGESTS.get(key)
+    if hit is not None and hit[0] == (str(path), str(root)):
+        try:
+            if all(_stamp(file) == stamp for file, stamp in hit[2]):
+                return hit[3]
+        except OSError:
+            pass
+    trace = []
+    token = _TRACE.set(trace)
+    try:
+        digest = hashlib.sha256(source_object(path, name, root=root).encode()).hexdigest()
+    finally:
+        _TRACE.reset(token)
+    _DIGESTS[key] = ((str(path), str(root)), None, tuple(trace), digest)
+    return digest
+
+
 def verify(expected, functions, constants):
     reasons = []
     for name, digest in expected['functions'].items():
@@ -115,6 +162,27 @@ def verify(expected, functions, constants):
     return {'ok': not reasons, 'reasons': sorted(reasons)}
 
 
+# Each module file is parsed once per process while its bytes are unchanged; source_object used to re-parse the
+# whole file for every symbol (about 290 compilations), which pushed plugin load past the host's 10 s limit.
+# Revisão F1–F5, R10: one entry per path, replaced when the file's stat changes, so the cache stays bounded.
+_PARSED = {}
+
+
+def _parsed(path):
+    path = Path(path)
+    info = path.stat()
+    stamp = (info.st_mtime_ns, info.st_size, info.st_ino)
+    hit = _PARSED.get(str(path))
+    if hit is None or hit[0] != stamp:
+        source = path.read_text(encoding='utf-8')
+        hit = (stamp, source, ast.parse(source, filename=str(path)))
+        _PARSED[str(path)] = hit
+    trace = _TRACE.get()
+    if trace is not None:
+        trace.append((str(path), stamp))
+    return hit[1], hit[2]
+
+
 # decisions/s3-delivery.md, SEC-S3-05: AST inspection must never execute defaults, annotations or decorators.
 def source_object(path, qualified, *, root=None, seen=frozenset()):
     """Inspect definitions and reexports without executing a native module or expression."""
@@ -123,8 +191,7 @@ def source_object(path, qualified, *, root=None, seen=frozenset()):
     identity = (path, qualified)
     if not path.is_relative_to(root) or identity in seen:
         raise ValueError('Source alias escapes root or cycles')
-    source = path.read_text(encoding='utf-8')
-    scope = ast.parse(source, filename=str(path))
+    source, scope = _parsed(path)
     parts = qualified.split('.')
     for index, part in enumerate(parts):
         definitions = [n for n in scope.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and n.name == part]
@@ -144,16 +211,28 @@ def source_object(path, qualified, *, root=None, seen=frozenset()):
     return ''.join(inspect.getblock(source.splitlines(keepends=True)[first - 1:]))
 
 
+# Desempenho 2026-11-18: module-level assignments of one parsed tree, kept while _parsed keeps that tree.
+_ASSIGNMENTS = {}
+
+
+def _assignments(path):
+    tree = _parsed(path)[1]
+    hit = _ASSIGNMENTS.get(str(path))
+    if hit is None or hit[0] is not tree:
+        assignments = {}
+        for node in tree.body:
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target] if isinstance(node, ast.AnnAssign) else []
+            for target in targets:
+                if isinstance(target, ast.Name):
+                    assignments[target.id] = node.value
+        hit = _ASSIGNMENTS[str(path)] = (tree, assignments)
+    return hit[1]
+
+
 def source_constant(path, name):
     if name in compat_tables.TABLES:
-        return compat_tables.binding(path, name)
-    tree = ast.parse(Path(path).read_text(encoding='utf-8'))
-    assignments = {}
-    for node in tree.body:
-        targets = node.targets if isinstance(node, ast.Assign) else [node.target] if isinstance(node, ast.AnnAssign) else []
-        for target in targets:
-            if isinstance(target, ast.Name):
-                assignments[target.id] = node.value
+        return compat_tables.binding(path, name, parsed=_parsed(path), parse=_parsed)
+    assignments = _assignments(path)
     def literal(value, seen):
         if isinstance(value, ast.Name):
             if value.id in seen or value.id not in assignments:
@@ -210,12 +289,12 @@ def collect_symbols(root, specs=FUNCTIONS, constant_specs=CONSTANTS, *, plugin_r
             # decisions/s3-plan.md, R4/O1: an active override cannot borrow pristine disk bytes when inspection fails.
             if loaded is not None:
                 try:
-                    functions[key] = fingerprint(value) if value is not None else None
+                    functions[key] = _loaded_digest(key, value) if value is not None else None
                 except (TypeError, OSError):
                     functions[key] = None
             else:
                 try:
-                    functions[key] = hashlib.sha256(source_object(path, name, root=base if module_name.startswith(prefix) else root).encode()).hexdigest()
+                    functions[key] = _source_digest(key, path, name, base if module_name.startswith(prefix) else root)
                 except (OSError, ValueError, StopIteration, SyntaxError, TypeError):
                     functions[key] = None
     for module_name, names in constant_specs.items():
@@ -233,7 +312,7 @@ def collect_symbols(root, specs=FUNCTIONS, constant_specs=CONSTANTS, *, plugin_r
                         loaded = sys.modules.get(type(provider).__module__, types.SimpleNamespace())
                 else:
                     path = Path(root).joinpath(*module_name.split('.')).with_suffix('.py')
-                value = (compat_tables.binding(path, name, loaded) if name in compat_tables.TABLES else
+                value = (compat_tables.binding(path, name, loaded, parsed=_parsed(path), parse=_parsed) if name in compat_tables.TABLES else
                          getattr(loaded, name) if loaded is not None else source_constant(path, name))
                 constants[key] = sorted(value) if isinstance(value, (set, frozenset)) else list(value) if isinstance(value, tuple) else value
             except (OSError, ValueError, SyntaxError, TypeError, AttributeError, KeyError, StopIteration):
@@ -266,7 +345,7 @@ def native_revision(root):
     return head
 
 
-def _source_compatibility():
+def _source_compatibility(home=None):
     if os.environ.get('HERMES_CONFIG_BACKEND', '').strip().lower() not in ('', 'file'):
         return {'ok': False, 'reasons': ['config_backend_not_file']}
     try:
@@ -289,8 +368,10 @@ def _source_compatibility():
                     'revision': revision, 'qualified_revision': pending[0]['revision']}
         if not candidates:
             return {'ok': False, 'reasons': ['host_not_qualified' if revision is not None else 'native_source_unavailable']}
-        from hermes_constants import get_hermes_home
-        actual = collect_symbols(root, plugin_root=get_hermes_home() / 'plugins' / 'advanced-delegation')
+        if home is None:
+            from hermes_constants import get_hermes_home
+            home = get_hermes_home()
+        actual = collect_symbols(root, plugin_root=Path(home) / 'plugins' / 'advanced-delegation')
         required = {kind: {module + '.' + name for module, names in specs.items() for name in names}
                     for kind, specs in (('functions', FUNCTIONS), ('constants', CONSTANTS))}
         checks = []
@@ -314,14 +395,14 @@ def _source_compatibility():
 
 
 # decisions/s3-delivery.md, "Continuação": inspect registration only; dependency absence must never trigger discovery or auth.
-def native_delegation_status(config=None):
+def native_delegation_status(config=None, home=None):
     """Read the current registration only; never trigger discovery, auth or a mutating config loader."""
     unavailable = {'ok': False, 'reason': 'advanced_delegation_unavailable', 'required_version': '1.1.0'}
     try:
         if config is None:
             from hermes_cli.config import get_config_path
-            from hermes_cli.config_backend import read_config_doc
-            config = read_config_doc(get_config_path())
+            from .inventory import read_document
+            config = read_document(Path(home) / 'config.yaml' if home is not None else get_config_path(), shared=True)
         plugins = config.get('plugins', {})
         if ('advanced-delegation' not in plugins.get('enabled', []) or
                 'advanced-delegation' in plugins.get('disabled', []) or config.get('delegation', {}).get('backend') != 'model_map'):
@@ -336,5 +417,19 @@ def native_delegation_status(config=None):
         return unavailable
 
 
-def native_compatibility():
-    return dict(_source_compatibility(), subagents=native_delegation_status())
+# D-37 and Revisão F1–F5, R4: `home` pins the profile captured at register(); None keeps the context's home.
+def native_compatibility(home=None):
+    return dict(_source_compatibility(home), subagents=native_delegation_status(home=home))
+
+
+# decisions/aux-plan.md, D-AUXP-3: never reuse main qualification for an unmeasured auxiliary set.
+def native_auxiliary_compatibility(home=None):
+    """Auxiliary writes follow the same host qualification as the conversation and routes.
+
+    decision D-36: delivery is validated in the running app, without the separate
+    auxiliary fingerprint set; a host that fails the main qualification still blocks auxiliary writes.
+    """
+    result = _source_compatibility(home)
+    if result.get('ok'):
+        return {'ok': True, 'reasons': [], 'host': result.get('host'), 'revision': result.get('revision')}
+    return {'ok': False, 'reasons': list(result.get('reasons') or ['native_source_unavailable']), 'fingerprint_failure': True}

@@ -34,19 +34,19 @@ def fake_host(path, document):
 
 
 CONFIG = {
-    "model": {"provider": "openai-codex", "default": "gpt-6.1-sol", "base_url": "https://example.invalid", "api_mode": "codex_responses"},
+    "model": {"provider": "openai-codex", "default": "gpt-6.2-sol", "base_url": "https://example.invalid", "api_mode": "codex_responses"},
     "delegation": {
         "provider": "openai-codex", "model": "gpt-6.1-terra", "reasoning_effort": "medium",
         "backends": {"model_map": {"default": "general", "options": [
             {"name": "general", "description": "d", "provider": "openai-codex", "model": "gpt-6.1-terra", "reasoning_effort": "medium"},
-            {"name": "deep", "description": "d", "provider": "openai-codex", "model": "gpt-6.1-sol", "reasoning_effort": "xhigh"},
+            {"name": "deep", "description": "d", "provider": "openai-codex", "model": "gpt-6.2-sol", "reasoning_effort": "xhigh"},
         ]}},
     },
     "agent": {"reasoning_effort": "xhigh"},
 }
 JOBS = [
     {"id": "a", "name": "unpinned"},
-    {"id": "b", "name": "full pin", "provider": "openai-codex", "model": "gpt-6.1-sol", "base_url": "https://example.invalid"},
+    {"id": "b", "name": "full pin", "provider": "openai-codex", "model": "gpt-6.2-sol", "base_url": "https://example.invalid"},
     {"id": "c", "name": "model only", "model": "gpt-6.1-terra"},
     {"id": "d1e2", "name": "send report to user@example.com with token sk-123", "base_url": "https://example.invalid"},
 ]
@@ -55,7 +55,7 @@ JOBS = [
 class InventoryTests(unittest.TestCase):
     def test_reads_routes_conversation_and_cron_pins(self):
         inventory = read(CONFIG, JOBS)
-        self.assertEqual(inventory["conversation"], {"provider": "openai-codex", "model": "gpt-6.1-sol", "effort": "xhigh"})
+        self.assertEqual(inventory["conversation"], {"provider": "openai-codex", "model": "gpt-6.2-sol", "effort": "xhigh"})
         self.assertEqual([r["name"] for r in inventory["routes"]], ["general", "deep"])
         self.assertEqual(inventory["cron"]["unpinned"], 1)
         self.assertEqual(inventory["cron"]["pinned"], 1)
@@ -94,12 +94,12 @@ class InventoryTests(unittest.TestCase):
     def test_native_efforts_are_kept(self):
         config = json.loads(json.dumps(CONFIG))
         options = config["delegation"]["backends"]["model_map"]["options"]
-        options.append({"name": "maxed", "provider": "openai-codex", "model": "gpt-6.1-sol", "reasoning_effort": "max"})
-        options.append({"name": "ultra", "provider": "openai-codex", "model": "gpt-6.1-sol", "reasoning_effort": "ultra"})
+        options.append({"name": "maxed", "provider": "openai-codex", "model": "gpt-6.2-sol", "reasoning_effort": "max"})
+        options.append({"name": "ultra", "provider": "openai-codex", "model": "gpt-6.2-sol", "reasoning_effort": "ultra"})
         inventory = read(config, [])
         self.assertEqual([r["effort"] for r in inventory["routes"]][-2:], ["max", "ultra"])
         pair = propose(inventory, {}, settings())["variants"]["base"]["maxed"]
-        self.assertEqual(pair["openai-codex"], {"model": "gpt-6.1-sol", "effort": "max"})
+        self.assertEqual(pair["openai-codex"], {"model": "gpt-6.2-sol", "effort": "max"})
         from quota_router.settings import validate
         self.assertTrue(validate("roles", {"maxed": pair})[0])
         options.append({"name": "terra-max", "provider": "openai-codex", "model": "gpt-6.1-terra", "reasoning_effort": "max"})
@@ -160,7 +160,7 @@ class MappingTests(unittest.TestCase):
         result = propose(self.inventory, self.r(True), settings())
         self.assertEqual(set(result["variants"]), {"base", "fable", "astra", "fable+astra"})
         for variant in result["variants"].values():
-            self.assertEqual(variant["conversation"]["openai-codex"], {"model": "gpt-6.1-sol", "effort": "xhigh"})
+            self.assertEqual(variant["conversation"]["openai-codex"], {"model": "gpt-6.2-sol", "effort": "xhigh"})
         self.assertEqual(result["variants"]["astra"]["deep"]["openai-codex"]["model"], "gpt-6-astra")
         self.assertEqual(result["variants"]["fable"]["deep"]["anthropic"]["model"], "claude-fable-5-2")
         self.assertEqual(result["variants"]["base"]["general"]["anthropic"]["model"], "claude-sonnet-5-5")
@@ -174,7 +174,7 @@ class MappingTests(unittest.TestCase):
         options.append({"name": "inherits"})
         result = propose(read(config, JOBS), self.r(True), settings())
         claude_side = result["variants"]["base"]["claude-side"]
-        self.assertEqual(claude_side["openai-codex"]["model"], "gpt-6.1-sol")
+        self.assertEqual(claude_side["openai-codex"]["model"], "gpt-6.2-sol")
         self.assertEqual(claude_side["anthropic"]["model"], "claude-opus-5-5")
         inherits = result["variants"]["base"]["inherits"]
         self.assertEqual(inherits["openai-codex"], {"model": "gpt-6.1-terra", "effort": "medium"})

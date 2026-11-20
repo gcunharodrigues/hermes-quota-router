@@ -5,8 +5,11 @@ Reads the raw profile document with `hermes_cli.config_backend.read_config_doc` 
 It never calls native loaders that create folders, back up or repair files (`load_config*`, `read_raw_config`, `load_jobs`),
 and it never returns endpoints, keys, job names or prompts.
 """
+from copy import deepcopy
 import json
+import os
 import re
+from pathlib import Path
 
 from .settings import EFFORTS, SECRETISH, safe_model, safe_name
 
@@ -35,18 +38,53 @@ def read_jobs_file(path):
     return data if isinstance(data, list) else None
 
 
+# Desempenho 2026-11-18: a cycle parsed the working config.yaml (148 KB, about 17 ms) up to 240 times, which was
+# most of its 2 to 9 s. The parse depends only on the file bytes, so identical bytes reuse a private copy of the
+# parse made by the same native reader; any other byte, a non-file backend or a read error parses again.
+_DOCUMENTS = {}
+
+
+def read_document(path, shared=False):
+    """`read_config_doc(path)`, reusing the previous parse while the file holds the same bytes.
+
+    A `shared` caller only reads the result and gets the cached object itself instead of a private copy.
+    """
+    from hermes_cli.config_backend import read_config_doc
+    path = Path(path)
+    if os.environ.get('HERMES_CONFIG_BACKEND', '').strip().lower() not in ('', 'file'):
+        return read_config_doc(path)
+    try:
+        before = path.read_bytes()
+    except OSError:
+        return read_config_doc(path)
+    hit = _DOCUMENTS.get(str(path))
+    if hit is not None and hit[0] is read_config_doc and hit[1] == before:
+        return hit[2] if shared else deepcopy(hit[2])
+    document = read_config_doc(path)
+    try:
+        if path.read_bytes() == before:
+            _DOCUMENTS[str(path)] = (read_config_doc, before, deepcopy(document))
+    except OSError:
+        pass
+    return document
+
 
 # decisions/hqr-20-amendment.md, AC-17: raw parsing avoids native bootstrap, backup and job-repair side effects.
-def native_sources():
-    """(profile config, cron jobs) from the host, or None for each source outside a Hermes process."""
+def native_sources(path=None):
+    """(profile config, cron jobs) from the host, or None for each source outside a Hermes process.
+
+    D-37 and Revisão F1–F5, R4: `path` pins the profile's config.yaml captured at register(); None uses the context's.
+    """
     try:
-        from hermes_cli.config import get_config_path
-        from hermes_cli.config_backend import read_config_doc
-        path = get_config_path()
+        from hermes_cli.config_backend import read_config_doc  # noqa: F401 (host availability)
+        if path is None:
+            from hermes_cli.config import get_config_path
+            path = get_config_path()
+        path = Path(path)
     except Exception:
         return None, None
     try:
-        document = read_config_doc(path)
+        document = read_document(path)
         config = {} if document is None else document if isinstance(document, dict) else None
     except FileNotFoundError:
         config = {}

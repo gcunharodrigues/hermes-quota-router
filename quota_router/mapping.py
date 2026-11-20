@@ -1,12 +1,14 @@
-# Implements decisions/hqr-20-amendment.md, section 15 and D5/D9/D12; decisions/s3-plan.md, "Mapa aprovado".
+# Implements decisions/hqr-20-amendment.md, section 15 and D5/D9/D12; decisions/s3-plan.md, "Mapa aprovado";
+# decisions/aux-plan.md, "Mapa por tarefa", D-AUXP-1/7/8.
 """Equivalence map proposal by role and variant (HQR-20 amendment, section 15; decision D5).
 
-The proposal is never applied; only a map approved by Guilherme (`roles` setting, `config approve-map`) makes a decision actionable.
+The proposal is never applied; only an operator-approved map (`roles` setting, `config approve-map`) makes a decision actionable.
 """
 
 from copy import deepcopy
 import importlib
 import json
+import os
 import sys
 
 VARIANTS = ("base", "fable", "astra", "fable+astra")
@@ -25,8 +27,33 @@ _BASE_ROWS = {
     "triage": ("terra", "low", "sonnet", "medium"),
     "extract": ("luna", "high", "haiku", "high"),
 }
-_MODEL_IDS = {"sol": "gpt-6.1-sol", "terra": "gpt-6.1-terra", "luna": "gpt-6-luna",
+_MODEL_IDS = {"sol": "gpt-6.2-sol", "terra": "gpt-6.1-terra", "luna": "gpt-6-luna",
               "opus": "claude-opus-5-5", "sonnet": "claude-sonnet-5-5", "haiku": "claude-haiku-5-5"}
+
+
+# decisions/aux-plan.md, "Mapa por tarefa", D-AUXP-1/7/8: proposal only; approval is persisted separately.
+_AUXILIARY_ROWS = {
+    "title_generation": ("luna", "haiku", "low"),
+    "profile_describer": ("luna", "haiku", "low"),
+    "tts_audio_tags": ("luna", "haiku", "low"),
+    "compression": ("terra", "sonnet", "medium"),
+    "background_review": ("terra", "sonnet", "medium"),
+    "kanban_decomposer": ("terra", "sonnet", "medium"),
+    "approval": ("terra", "sonnet", "low"),
+    "goal_judge": ("terra", "sonnet", "low"),
+    "monitor": ("terra", "sonnet", "low"),
+    "triage_specifier": ("terra", "sonnet", "low"),
+    "voice_chat": ("terra", "sonnet", "low"),
+}
+
+
+def approved_auxiliary():
+    """Return an independent proposal; absent effort on Claude approval means remove the key, not null."""
+    result = {task: {"openai-codex": {"model": _MODEL_IDS[c], "effort": effort},
+                     "anthropic": {"model": _MODEL_IDS[a], "effort": effort}}
+              for task, (c, a, effort) in _AUXILIARY_ROWS.items()}
+    del result["approval"]["anthropic"]["effort"]
+    return result
 
 
 def approved_base():
@@ -57,22 +84,7 @@ def catalog_gate(provider, model, catalogs):
     return "model_absent_from_catalog" if catalog is not None and model not in catalog else None
 
 
-def native_catalogs():
-    # docs/compatibility.md, "Catálogo nativo models.dev na S3": held public metadata is not account availability.
-    try:
-        module = sys.modules.get("agent.models_dev")
-        if module is None:
-            module = importlib.import_module("agent.models_dev")
-        registry = getattr(module, "_models_dev_cache", None)
-        if not isinstance(registry, dict) or not registry:
-            # decisions/hqr-20-amendment.md, AC-17: native cache loaders repair files; use only the path helper and read.
-            with open(module._get_cache_path(), 'r', encoding='utf-8-sig') as handle:
-                registry = json.load(handle)
-        provider_map = module.PROVIDER_TO_MODELS_DEV
-    except Exception:
-        return {}
-    if not isinstance(registry, dict) or not isinstance(provider_map, dict):
-        return {}
+def _catalogs(registry, provider_map):
     catalogs = {}
     for provider in ("openai-codex", "anthropic"):
         entry = registry.get(provider_map.get(provider))
@@ -82,10 +94,46 @@ def native_catalogs():
     return catalogs
 
 
+# Desempenho 2026-11-18: the models.dev cache file has about 7 MB; when the host has not loaded it in memory, every
+# role decision parsed it again (several seconds per cycle). One parse is kept while the file's stat is unchanged.
+# Revisão da simplificação, F5: only the extracted catalogs are kept, keyed by the file stamp and the provider map.
+_CATALOG_FILE = (None, None)
+
+
+def _file_catalogs(path, provider_map):
+    global _CATALOG_FILE
+    info = os.stat(path)
+    key = (str(path), (info.st_mtime_ns, info.st_size, info.st_ino),
+           tuple(provider_map.get(provider) for provider in ("openai-codex", "anthropic")))
+    if _CATALOG_FILE[0] != key:
+        with open(path, 'r', encoding='utf-8-sig') as handle:
+            registry = json.load(handle)
+        _CATALOG_FILE = (key, _catalogs(registry, provider_map) if isinstance(registry, dict) else {})
+    return _CATALOG_FILE[1]
+
+
+def native_catalogs():
+    # docs/compatibility.md, "Catálogo nativo models.dev na S3": held public metadata is not account availability.
+    try:
+        module = sys.modules.get("agent.models_dev")
+        if module is None:
+            module = importlib.import_module("agent.models_dev")
+        registry = getattr(module, "_models_dev_cache", None)
+        provider_map = module.PROVIDER_TO_MODELS_DEV
+        if not isinstance(provider_map, dict):
+            return {}
+        if not isinstance(registry, dict) or not registry:
+            # decisions/hqr-20-amendment.md, AC-17: native cache loaders repair files; use only the path helper and read.
+            return {provider: list(models) for provider, models in _file_catalogs(module._get_cache_path(), provider_map).items()}
+    except Exception:
+        return {}
+    return _catalogs(registry, provider_map)
+
+
 def conversation_override(overrides):
     def canonical(value):
         return value.rsplit('/', 1)[-1].lower().replace('.', '-')
-    models = {canonical(m) for m in ("gpt-6.1-sol", "claude-opus-5-5")}
+    models = {canonical(m) for m in ("gpt-6.2-sol", "gpt-6.1-sol", "claude-opus-5-5")}
     return any(isinstance(key, str) and canonical(key) in models for key in overrides)
 
 
@@ -100,8 +148,8 @@ def model_gate(model):
     if "astra" in name:
         return "model_not_eligible:astra"
     return None
-CONVERSATION_CODEX = {"model": "gpt-6.1-sol", "effort": "xhigh"}
-CODEX_STRONG = "gpt-6.1-sol"
+CONVERSATION_CODEX = {"model": "gpt-6.2-sol", "effort": "xhigh"}
+CODEX_STRONG = "gpt-6.2-sol"
 CODEX_STANDARD = "gpt-6.1-terra"
 CLAUDE_STRONG = "claude-opus-5-5"
 CLAUDE_STANDARD = "claude-sonnet-5-5"

@@ -15,7 +15,7 @@ class UnchangedDecisionTests(unittest.TestCase):
             # D18: unchanged includes the native route fields, not only provider/model/effort.
             backend.document["model"].update(base_url="https://chatgpt.com/backend-api/codex", api_mode="codex_responses")
             engine = Engine(root, backend, compatible=qualified)
-            selection = {'provider': 'openai-codex', 'model': 'gpt-6.1-sol', 'effort': 'high'}
+            selection = {'provider': 'openai-codex', 'model': 'gpt-6.2-sol', 'effort': 'high'}
             engine.cycle({'conversation': selection}, now=100)
             first = engine.report(200)
             self.assertEqual(first['generation'], 1)

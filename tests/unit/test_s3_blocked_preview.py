@@ -44,7 +44,7 @@ class BlockedPreviewTests(unittest.TestCase):
                     self.assertEqual(backend.read(), before)
 
     def test_observe_reports_null_restore_limit_and_native_compatibility_gate_without_writes(self):
-        for gate in ('null', 'compatibility', 'settings', 'profile', 'backend'):
+        for gate in ('null', 'compatibility', 'settings', 'backend'):  # D-37: no profile gate
             with self.subTest(gate=gate), tempfile.TemporaryDirectory() as root:
                 helper, manager, ctx, backend = self.manager(root)
                 if gate == 'null':

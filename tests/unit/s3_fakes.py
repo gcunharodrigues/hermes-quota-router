@@ -1,9 +1,9 @@
 """Disposable S3 dependencies; no native imports or real account access."""
 import copy
 
-CONFIG = {"model": {"default": "gpt-6.1-sol", "provider": "openai-codex"}, "agent": {"reasoning_effort": "high"},
+CONFIG = {"model": {"default": "gpt-6.2-sol", "provider": "openai-codex"}, "agent": {"reasoning_effort": "high"},
           "delegation": {"backends": {"model_map": {"options": [
-              {"name": "general", "provider": "openai-codex", "model": "gpt-6.1-sol", "reasoning_effort": "medium",
+              {"name": "general", "provider": "openai-codex", "model": "gpt-6.2-sol", "reasoning_effort": "medium",
                "description": "synthetic", "fallbacks": ["synthetic"]},
               {"name": "untouched", "model": "gpt-6.1-terra", "custom": "preserved"}]}}}, "cron": {"model": "", "model_provider": ""}}
 TARGET = {"provider": "anthropic", "model": "claude-opus-5-5", "effort": "high"}

@@ -41,8 +41,9 @@ SOURCE = re.compile(r"^[a-z0-9_]{1,40}$")
 
 # README.md, HQR-35: discard private fields at the callback boundary, before retaining any native diagnostic.
 class _NativeFailure:
-    def __init__(self, details):
+    def __init__(self, details, *, native=False):
         self.details = {}
+        self.native = native
         if not isinstance(details, dict):
             return
         kind = details.get("kind")
@@ -68,8 +69,7 @@ def native_importer():
         parameter = inspect.signature(fetch_account_usage).parameters.get("on_error")
     except (TypeError, ValueError):
         parameter = None
-    if parameter is None or parameter.kind not in (inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD):
-        return lambda provider: fetch_account_usage(provider, read_only=True)
+    accepts_callback = parameter is not None and parameter.kind in (inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
 
     def read(provider):
         failure = None
@@ -77,10 +77,15 @@ def native_importer():
         def on_error(details):
             nonlocal failure
             if failure is None:
-                failure = _NativeFailure(details)
+                failure = _NativeFailure(details, native=True)
 
-        options: dict = {"read_only": True, "on_error": on_error}
-        snapshot = fetch_account_usage(provider, **options)
+        options: dict = {"read_only": True}
+        if accepts_callback:
+            options["on_error"] = on_error
+        try:
+            snapshot = fetch_account_usage(provider, **options)
+        except Exception:
+            return _NativeFailure({"kind": "error"}, native=True)
         return snapshot if snapshot is not None else failure
 
     return read
@@ -323,6 +328,9 @@ def normalize(provider, snapshot, now, max_age_s):
         if kind == "http" and status is not None:
             reason = f"http_{status}"
         reading = _unknown(provider, reason)
+        if snapshot.native and kind == "error":
+            # The host may report response decoding failures through this same callback.
+            reading["failure_unclassified"] = True
         if "retry_after_s" in details:
             reading["retry_after_s"] = details["retry_after_s"]
         return reading
@@ -339,6 +347,10 @@ def revalidate(readings, now, max_age_s):
     for provider, reading in readings.items():
         if reading["state"] != "ok":
             result[provider] = reading
+            continue
+        if reading.get("last_known"):
+            # D-35: a carried reading is judged by carry_forward, which already renewed elapsed windows.
+            result[provider] = carry_forward(reading, now) or _unknown(provider, "stale_reading", reading["fetched_at"])
             continue
         # SOL-03: model-only reset expiry forces cache refresh, but at decision time it blocks only that model.
         # eligibility rechecks each applicable reset at `now`, without the A23 credit exception for elapsed windows.
@@ -374,11 +386,100 @@ def _backing_off(reading, now):
     return dict(reading) if now < retry_at else None
 
 
-def collect(providers, now, max_age_s, reader=None, cache=None, importer=None, clock=None):
+# decision D-35: a failed fetch decides on the last known reading, never on nothing.
+# Revisão F1–F5, R5: at most 5 h, one session window; an older reading no longer describes the account.
+LAST_KNOWN_MAX_AGE_S = SESSION_S
+WINDOW_KINDS = ("session", "week", "model_week", "model_session")
+
+
+def _stamp(value):
+    moment = datetime.fromisoformat(value)
+    if not _aware(moment):
+        raise ValueError("naive timestamp")
+    return moment
+
+
+# Revisão F1–F5, R7: a stored reading is used only in the shape `_normalize` produces; anything else is discarded.
+def last_known_valid(provider, reading):
+    try:
+        if not isinstance(reading, dict) or reading.get("provider") != provider or reading.get("state") != "ok":
+            return False
+        _stamp(reading["fetched_at"])
+        windows, models = reading["windows"], reading.get("model_windows", [])
+        if not isinstance(windows, list) or not isinstance(models, list) or not isinstance(reading.get("credits"), dict):
+            return False
+        for window in windows + models:
+            if not isinstance(window, dict):
+                return False
+            if window.get("kind") == "model_unqualified":
+                continue
+            used, reset = window.get("used_pct"), window.get("reset_at")
+            if (window.get("kind") not in WINDOW_KINDS or window.get("duration_s") not in (SESSION_S, WEEK_S)
+                    or not _number(used) or not 0 <= used <= 100):
+                return False
+            if reset is not None:
+                _stamp(reset)
+        return bool(reading.get("credits_only")) or any(w.get("kind") == "week" for w in windows)
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
+def carry_forward(reading, now):
+    """The last successful reading of a provider, judged at `now`, or None when it is too old or malformed.
+
+    Windows keep their published reset: one that already passed is not taken as renewed (0% used), so the policy
+    reads it as `reset_passed`, an unknown state, like a fresh reading would.
+    The result is marked `last_known` so status shows it and decision-time revalidation does not discard it for its age.
+    """
+    if not isinstance(reading, dict) or not last_known_valid(reading.get("provider"), reading):
+        return None
+    try:
+        age = (now - _stamp(reading["fetched_at"])).total_seconds()
+    except (TypeError, ValueError):
+        return None
+    if not 0 <= age <= LAST_KNOWN_MAX_AGE_S:
+        return None
+    carried = dict(reading, windows=[dict(w) for w in reading["windows"]], age_s=age, last_known=True)
+    if "model_windows" in reading:
+        carried["model_windows"] = [dict(w) for w in reading["model_windows"]]
+    return carried
+
+
+def collect(providers, now, max_age_s, reader=None, cache=None, importer=None, clock=None, last_good=None, no_carry=()):
     """Reuse fresh quota or a backed-off failure; returns (readings, queries issued).
 
     `now` validates cache hits; a failure's backoff starts at `clock()` sampled after its fetch.
+    `last_good` (D-35) maps provider to its last successful fetch: it is updated on success and replaces a
+    failed fetch, so a transient reader failure does not move work to the other provider.
+    A provider in `no_carry` was just rate limited (R5): its failed fetch stays unknown, never last known.
     """
+    readings, queries = _collect(providers, now, max_age_s, reader, cache, importer, clock)
+    if last_good is None:
+        return readings, queries
+    at = clock() if clock else now
+    for provider, reading in list(readings.items()):
+        if reading["state"] == "ok" and not reading.get("last_known"):
+            last_good[provider] = {k: v for k, v in reading.items() if k != "age_s"}
+        # D-35 / D-43: collection unavailability can borrow a snapshot; an unqualified response cannot.
+        # A pending status refresh uses reader_unavailable internally and never applies its preview.
+        elif (reading["state"] == "unknown" and provider not in no_carry and not reading.get("failure_unclassified")
+              and (reading.get("reason") in ("timeout", "network_error", "reader_error", "reader_unavailable")
+                   or reading["reason"] in ("http_500", "http_502", "http_503", "http_504"))):
+            carried = carry_forward(last_good.get(provider), at)
+            if carried is not None:
+                readings[provider] = dict(carried, failed_reason=reading.get("reason"), failed_at=reading.get("failed_at"))
+    return readings, queries
+
+
+def reusable(cached, now, max_age_s):
+    """True when `_collect` would answer from this cache entry without a fetch (R1 synchronous path)."""
+    try:
+        return bool(cached) and (_still_valid(cached, now, max_age_s) or _backing_off(cached, now)) is not None
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
+def _collect(providers, now, max_age_s, reader=None, cache=None, importer=None, clock=None):
     if reader is None:
         reader = (importer or native_importer)()
     readings, queries = {}, 0
@@ -399,7 +500,8 @@ def collect(providers, now, max_age_s, reader=None, cache=None, importer=None, c
         completed_at = clock() if clock else now
         reading = normalize(provider, snapshot, completed_at, max_age_s)
         if reading["state"] == "unknown":
-            # README.md, HQR-35: never reuse a prior successful quota as capacity after a failed refresh.
+            # README.md, HQR-35: a failed refresh is never capacity by itself; only collect() may carry the last good
+            # reading forward (D-35), within LAST_KNOWN_MAX_AGE_S, never after a rate limit and never across a reset.
             failed_at = completed_at.astimezone(timezone.utc)
             seconds = min(MAX_BACKOFF_S, max(MIN_BACKOFF_S, reading.get("retry_after_s", FAILURE_BACKOFF_S)))
             if reading["reason"] in STRUCTURAL:

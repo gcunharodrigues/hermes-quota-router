@@ -58,12 +58,12 @@ class SafetyNetLifecycleTests(unittest.TestCase):
             result = self.call(manager, 'mode auto')
             document = backend.read()
             self.assertEqual(document['model']['provider'], 'openai-codex')
-            self.assertEqual(document['fallback_providers'], [{'provider': 'openai-codex', 'model': 'gpt-6.1-sol'}, OPUS])
-            self.assertEqual(self.option(document)['fallback_providers'], [{'provider': 'openai-codex', 'model': 'gpt-6.1-sol'}, OPUS])
+            self.assertEqual(document['fallback_providers'], [{'provider': 'openai-codex', 'model': 'gpt-6.2-sol'}, OPUS])
+            self.assertEqual(self.option(document)['fallback_providers'], [{'provider': 'openai-codex', 'model': 'gpt-6.2-sol'}, OPUS])
             self.assertEqual(result['decisions']['conversation']['safety_net']['chain'],
-                             [{'provider': 'openai-codex', 'model': 'gpt-6.1-sol'}, OPUS])
+                             [{'provider': 'openai-codex', 'model': 'gpt-6.2-sol'}, OPUS])
             self.assertEqual(result['decisions']['routes']['general']['safety_net']['chain'],
-                             [{'provider': 'openai-codex', 'model': 'gpt-6.1-sol'}, OPUS])
+                             [{'provider': 'openai-codex', 'model': 'gpt-6.2-sol'}, OPUS])
             applied = self.call(manager, 'status')['applied']
             for name in ('fallback:conversation', 'fallback:general'):
                 self.assertTrue(applied['safety_net'][name]['active'], name)
@@ -78,10 +78,10 @@ class SafetyNetLifecycleTests(unittest.TestCase):
             self.call(manager, 'config approve-map base')
             result = self.call(manager, 'mode auto')
             document = backend.read()
-            self.assertEqual(document['fallback_providers'], [{'provider': 'openai-codex', 'model': 'gpt-6.1-sol'}])
-            self.assertEqual(self.option(document)['fallback_providers'], [{'provider': 'openai-codex', 'model': 'gpt-6.1-sol'}])
+            self.assertEqual(document['fallback_providers'], [{'provider': 'openai-codex', 'model': 'gpt-6.2-sol'}])
+            self.assertEqual(self.option(document)['fallback_providers'], [{'provider': 'openai-codex', 'model': 'gpt-6.2-sol'}])
             self.assertEqual(result['decisions']['conversation']['safety_net']['chain'],
-                             [{'provider': 'openai-codex', 'model': 'gpt-6.1-sol'}])
+                             [{'provider': 'openai-codex', 'model': 'gpt-6.2-sol'}])
 
     def test_chain_follows_the_next_decision_and_empties_a_present_key(self):
         config = copy.deepcopy(CONFIG)
@@ -89,11 +89,11 @@ class SafetyNetLifecycleTests(unittest.TestCase):
         with self.fixture(config=config) as (manager, backend, _, snapshots):
             self.call(manager, 'config approve-map base')
             self.call(manager, 'mode auto')
-            self.assertEqual(backend.read()['fallback_providers'], [{'provider': 'openai-codex', 'model': 'gpt-6.1-sol'}, OPUS])
+            self.assertEqual(backend.read()['fallback_providers'], [{'provider': 'openai-codex', 'model': 'gpt-6.2-sol'}, OPUS])
             snapshots['anthropic'] = claude(100)
             manager.cache.clear()
             self.call(manager, 'apply')
-            self.assertEqual(backend.read()['fallback_providers'], [{'provider': 'openai-codex', 'model': 'gpt-6.1-sol'}])
+            self.assertEqual(backend.read()['fallback_providers'], [{'provider': 'openai-codex', 'model': 'gpt-6.2-sol'}])
             self.call(manager, 'mode off')
             self.assertEqual(backend.read(), config)
 
@@ -137,7 +137,7 @@ class SafetyNetLifecycleTests(unittest.TestCase):
             self.assertIn('Codex: Pressionado', text)
             self.assertIn('Claude: Livre', text)
             self.assertIn('Rede de segurança', text)
-            self.assertIn('tenta Codex gpt-6.1-sol', text)
+            self.assertIn('tenta Codex gpt-6.2-sol', text)
             self.assertNotIn('fallback:conversation', text)
 
 

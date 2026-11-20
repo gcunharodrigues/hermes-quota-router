@@ -10,7 +10,7 @@ from quota_router.policy import decide, fallback_chain
 from quota_router.readings import normalize
 
 CODEX, CLAUDE = 'openai-codex', 'anthropic'
-SOL = {'provider': CODEX, 'model': 'gpt-6.1-sol'}
+SOL = {'provider': CODEX, 'model': 'gpt-6.2-sol'}
 OPUS = {'provider': CLAUDE, 'model': 'claude-opus-5-5'}
 PAIR = approved_base()['conversation']
 

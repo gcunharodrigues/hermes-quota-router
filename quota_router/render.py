@@ -1,5 +1,6 @@
 # Implements decisions/hqr-20-amendment.md, AC-16/22/23/24; decisions/s2-delivery.md, "Piloto no Hermes de trabalho (D1)"; README.md, HQR-35;
 # decisions/hqr-38-spec.md, D-28 to D-31: provider states and the native safety net in plain Portuguese.
+# decisions/aux-plan.md, "Configuração consumers.auxiliary" and D-AUXP-8: auxiliary settings labels.
 """Human-readable chat output for /quota-router (Portuguese); raw JSON stays available with `--json`.
 
 Order follows the owner-brief rules: conclusion first, then the numbers behind it, then what needs attention,
@@ -17,6 +18,8 @@ WEEKDAYS = ("seg", "ter", "qua", "qui", "sex", "sáb", "dom")
 READING_REASONS = {
     "no_snapshot": "sem dados do provedor (sem login, ou o provedor não respondeu)",
     "reader_unavailable": "o leitor de cotas do Hermes não está disponível",
+    # Incidente 19/11: a command answers without waiting for a slow fetch, which goes on in the background.
+    "refresh_pending": "a leitura está sendo atualizada em segundo plano",
     "reader_error": "a consulta ao provedor falhou",
     # README.md, HQR-35: a known transport failure is not an exhausted quota window.
     "http_429": "o provedor limitou consultas (HTTP 429)",
@@ -75,6 +78,8 @@ DECISION_REASONS = {
     "challenger_above_hysteresis": "passou a ter mais de {h}% de vantagem, o limite de troca",
     "credits_after_subscriptions": "nenhuma franquia serve; usa créditos permitidos",
     "no_eligible_candidate": "nenhum provedor pode ser usado agora",
+    "incumbent_reading_unknown": "mantém a configuração: a cota da rota atual é desconhecida",
+    "fresh_quota_pair_required": "mantém a configuração: a troca exige leituras atuais dos dois provedores",
     "only_subscription": "é o único com franquia livre; créditos só entram quando nenhuma franquia serve",
     # decisions/hqr-38-spec.md, D-31: with every 5 h window pressed, weekly slack decides, still within the subscription.
     "pressured_best_pacing": "as duas janelas de 5 h passaram de {p}%; vale a maior folga semanal, ainda pela franquia",
@@ -89,6 +94,8 @@ MAP_NOTES = {
 }
 
 SETTINGS_TEXT = {
+    "consumers.auxiliary": ("Auxiliares", "gravar rotas de tarefas auxiliares fixadas; desligado por padrão"),
+    "auxiliary_map": ("Auxiliares", "mapa aprovado por tarefa; aprovar com /quota-router config approve-map auxiliary"),
     "consumers.conversation": ("O que recomendar", "recomendar o modelo da conversa principal (vale em sessões novas)"),
     "consumers.subagents": ("O que recomendar", "recomendar o modelo de cada rota de subagente"),
     "consumers.cron": ("O que recomendar", "sem efeito; cron segue a conversa nos campos sem padrão ou pin próprio (D12)"),
@@ -308,12 +315,15 @@ def recommendation(decisions, providers, settings, decided_at=None):
     for label, decision in consumers(decisions):
         if decision.get("state") in ("disabled_by_setting", "blocked_partial_pins", "jobs_unavailable", "group_blocked", "backend_unavailable", "catalog_model_absent"):
             continue
-        groups.setdefault((decision.get("choice"), decision.get("tier")), []).append(label)
+        retention = decision.get("reason") if decision.get("state") == "route_retained" else None
+        groups.setdefault((decision.get("choice"), decision.get("tier"), retention), []).append(label)
     lines = []
     routes = len(decisions.get("routes", {}))
-    for (choice, tier), labels in groups.items():
+    for (choice, tier, retention), labels in groups.items():
         who = describe_scope(labels, routes)
-        if choice is None:
+        if retention:
+            lines.append(f"**Sem troca** para {who}: {reason_text(retention, settings)}. Isso não autoriza uma chamada.")
+        elif choice is None:
             resets = sorted(r for _, d in consumers(decisions) for r in (d.get("resets") or []))
             back = f" A primeira franquia renova {when(resets[0])}." if resets else ""
             lines.append(f"**Nenhum provedor pode ser usado agora** para {who}.{back}")
@@ -330,6 +340,10 @@ def recommendation(decisions, providers, settings, decided_at=None):
         if unusable:
             why.append(f"a leitura do {name} não é confiável ({BLOCKS[unusable]})")
             continue
+        if reading.get("last_known"):
+            minutes = int((reading.get("age_s") or 0) // 60)
+            now = "está sendo atualizada" if reading.get("failed_reason") == "refresh_pending" else "falhou agora"
+            why.append(f"a leitura do {name} {now}; uso a última conhecida, de {minutes} min atrás")
         for window in reading["windows"]:
             state = over(window, settings)
             if window["kind"] == "week":
@@ -436,7 +450,7 @@ def attention(status):
             lines.append(f"• Exclusão anterior de {group_label(role)}; campos: {', '.join(fields)}; o próximo Auto avalia uma nova inscrição.")
         else:
             lines.append(f"• {group_label(role)} fora do Auto; campos: {', '.join(fields)}; não foi sobrescrito nem restaurado.")
-    for key, item in (status.get("settings_invalid") or {}).items():
+    for key in status.get("settings_invalid") or {}:
         lines.append(f"• A configuração `{key}` tem um valor inválido; o plugin usa o padrão até você corrigir com `/quota-router config reset {key}`.")
     decisions = status.get("decisions") or {}
     cron = decisions.get("cron") or {}
@@ -515,10 +529,17 @@ def safety_net_lines(decisions, auto):
     return lines
 
 
+def refresh_lines(status, auto):
+    if (status.get('quota') or {}).get('refresh') != 'pending':
+        return []
+    tail = ' O Auto não aplicou nada nesta consulta.' if auto else ''
+    return [f"As cotas estão sendo lidas em segundo plano; abaixo, a última leitura conhecida. Consulte de novo em instantes.{tail}"]
+
+
 def auto_text(status):
     applied = status.get('applied') or {}
     latest = applied.get('last_applied')
-    lines = ['**Quota Router · Auto** — melhor esforço para próximas tarefas']
+    lines = ['**Quota Router · Auto** — melhor esforço para próximas tarefas'] + refresh_lines(status, True)
     if latest:
         age = applied.get('age_s')
         lines.append(f"Última decisão aplicada: geração {applied.get('generation')}, há {int(age)} s.")
@@ -536,6 +557,17 @@ def auto_text(status):
         lines.append('**Auto suspenso; novas escritas bloqueadas:** ' + ', '.join(status['auto_suspended']))
     for role, fields in (applied.get('groups_out') or {}).items():
         lines.append(f"• {group_label(role)} fora do Auto: {', '.join(fields)}; nenhum valor privado é exibido.")
+    fallbacks = []
+    for group, entry in (applied.get('safety_net') or {}).items():
+        if not entry.get('active') or entry.get('fallback_written') is not True or group in (applied.get('groups_out') or {}):
+            continue
+        chain = entry['values'].get('fallback_providers', {}).get('value') or []
+        names = ', depois '.join(f"{NAMES.get(item['provider'], item['provider'])} {item['model']}" for item in chain)
+        fallbacks.append(f"• {group_label(group)}: {names or 'sem entradas gerenciadas'}.")
+    if fallbacks:
+        lines += ['', '**Fallback gerenciado aplicado**', *fallbacks]
+    if (status.get('decisions') or {}).get('conversation', {}).get('legacy_fallback_present'):
+        lines.append('O Hermes ainda pode usar o fallback legado (`fallback_model`), que o plugin não altera.')
     absence = applied.get('absence')
     if absence:
         lines.append(f"Auto declarado; plugin ausente ou sem ciclo de {absence['from']} a {absence['to']}.")
@@ -555,7 +587,7 @@ def auto_text(status):
         for label, row in [('padrão', origins['default'])] + [(r['job'], r) for r in origins['jobs']]:
             fields = '; '.join(f"{k}: {row[k]['value'] or 'não informado'} ({row[k]['origin']})" for k in ('model', 'provider', 'effort'))
             lines.append(f"• {label}{' · parcial' if row['partial'] else ''}: {fields}")
-    lines += ['', 'Fora da cobertura: sessões gerenciadas antigas, pins, auxiliares e retries; chats fixados, CLI e chamadas em andamento dependem da rede de segurança nativa.',
+    lines += ['', 'Fora da cobertura: sessões gerenciadas antigas, pins, auxiliares em `auto` ou fora do mapa e retries; chats fixados, CLI e chamadas em andamento dependem da rede de segurança nativa.',
               'Fonte de sessão não qualificada: geração indeterminada, sem idade por tarefa.',
               applied.get('limit', 'O plugin não veta chamadas nem limita gastos.'),
               'OFF restaura apenas os grupos intactos; dados brutos: acrescente `--json`.']
@@ -576,7 +608,7 @@ def status_text(status):
     settings = status["settings"]
     providers = status["quota"]["providers"]
     decisions = status.get("decisions") or {}
-    lines = [f"**Quota Router · Observe** — {stamp} · só recomenda, não muda nada", ""]
+    lines = [f"**Quota Router · Observe** — {stamp} · só recomenda, não muda nada", *refresh_lines(status, False), ""]
     if "conversation" in decisions:
         lines += recommendation(decisions, providers, settings, status.get("decided_at"))
     if status.get("decision_incomplete"):
@@ -603,7 +635,7 @@ def status_text(status):
         steps.append(f"• Aprovar o mapa proposto: `/quota-router config approve-map {decisions.get('variant', 'base')}`")
     steps += ["• Entender cada decisão: `/quota-router explain`", "• Ver e mudar preferências: `/quota-router config`"]
     lines += ["", "**Próximos passos**"] + steps
-    lines += ["", "Fora do alcance: chamadas auxiliares, retries e sessões gerenciadas abertas antes da decisão; chats fixados, CLI e "
+    lines += ["", "Fora do alcance: auxiliares em `auto` ou fora do mapa, chamadas auxiliares em andamento, retries e sessões gerenciadas abertas antes da decisão; chats fixados, CLI e "
               "chamadas em andamento dependem da rede de segurança nativa. Dados brutos: acrescente `--json` ao comando."]
     return "\n".join(lines)
 
@@ -704,7 +736,10 @@ def explain_text(status):
             if only and tier == "subscription" and reason in ("best_pacing", "previous_preference_kept", "principal_eligible"):
                 reason = "only_subscription"
             how = "pela franquia" if tier == "subscription" else "com créditos"
-            head = f"**Decisão**: {NAMES[choice]}, {how}, para {who}" if choice else f"**Decisão**: nenhum provedor para {who}"
+            if reason in ('incumbent_reading_unknown', 'fresh_quota_pair_required'):
+                head = f"**Decisão**: sem troca para {who}"
+            else:
+                head = f"**Decisão**: {NAMES[choice]}, {how}, para {who}" if choice else f"**Decisão**: nenhum provedor para {who}"
             lines.append(f"{head} — {reason_text(reason, settings)}.")
     for approved_only, title in ((True, "Mudanças por papel (mapa aprovado)"), (False, "Mudanças por papel (proposta, ainda não aplicada)")):
         rows = []
@@ -725,6 +760,8 @@ def explain_text(status):
 def value_text(key, value):
     if isinstance(value, bool):
         return "ligado" if value else "desligado"
+    if key == "auxiliary_map":
+        return f"aprovado para {len(value)} tarefas" if value else "não aprovado"
     if key == "roles":
         return f"aprovado para {len(value)} papéis" if value else "não aprovado"
     return str(value)
@@ -766,10 +803,75 @@ def _render(command, payload):
     return status_text(payload)
 
 
+# decisions/aux-plan.md, "Render, status e explain": auxiliary previews and retained obligations are never main groups.
+AUXILIARY_LABELS = {'title_generation': 'Títulos', 'profile_describer': 'Descrição de profile',
+                    'tts_audio_tags': 'Tags de voz', 'compression': 'Compressão', 'background_review': 'Revisão de fundo',
+                    'kanban_decomposer': 'Decomposição Kanban', 'approval': 'Aprovação', 'goal_judge': 'Juiz de metas',
+                    'monitor': 'Monitor', 'triage_specifier': 'Triagem', 'voice_chat': 'Conversa por voz'}
+AUXILIARY_STATES = {'preview_only': 'prévia; nenhuma escrita auxiliar', 'decided': 'escolha para a próxima chamada',
+                    'unchanged': 'rota já corresponde à escolha', 'not_enrolled_auto': 'herança nativa; fora do Auto auxiliar',
+                    'not_in_map': 'fora do mapa aprovado', 'group_blocked': 'grupo bloqueado; nenhuma sobrescrita',
+                    'auxiliary_model_not_eligible': 'nenhum modelo auxiliar elegível',
+                    'crossed_to_other_provider': 'outro provedor; modelo da origem inelegível',
+                    'catalog_model_absent': 'modelo ausente do catálogo', 'source_map_not_approved': 'mapa da conversa não aprovado',
+                    'plugin_registry_unavailable': 'registro de plugins indisponível; escritas auxiliares suspensas',
+                    'no_candidate': 'nenhum provedor elegível', 'suspended': 'escritas auxiliares suspensas'}
+
+
+def auxiliary_lines(status, detail=False):
+    decision = (status.get('decisions') or {}).get('auxiliary') or {}
+    applied = (status.get('applied') or {}).get('auxiliary') or {}
+    if not decision and not applied:
+        return []
+    lines = ['', '**Auxiliares**']
+    if not (status.get('settings') or {}).get('consumers.auxiliary'):
+        lines.append('Auxiliares desligadas (`consumers.auxiliary`); em Auto, nada será gravado nas tarefas.')
+    source = decision.get('source') or {}
+    if source:
+        path = 'decisão da conversa' if source.get('path') == 'conversation' else 'calculada sem aplicar à conversa'
+        lines.append(f"Origem: {NAMES.get(source.get('choice'), 'sem candidato')} · {path}.")
+    for task, item in decision.get('tasks', {}).items():
+        label = AUXILIARY_LABELS.get(task, task)
+        current = item.get('current') or {}
+        choice = item.get('choice')
+        target = (item.get('cells') or {}).get(choice, {})
+        route = f"{NAMES.get(choice, 'sem escolha')} {target.get('model', '')} {target.get('effort', '')}".strip()
+        lines.append(f"• {label}: {current.get('model') or 'herdado'} → {route}; {AUXILIARY_STATES.get(item.get('state'), 'indisponível')}.")
+        if item.get('blocked_fields'):
+            lines.append('  Campos: ' + ', '.join(item['blocked_fields']) + '; valores não exibidos.')
+        if item.get('model_state'):
+            lines.append('  Estado dos modelos: ' + '; '.join(f"{NAMES[p]}: {STATE_NAMES.get(state, 'Desconhecido')}" for p, state in item['model_state'].items()) + '.')
+        if item.get('resets') and not choice:
+            lines.append('  Renovações: ' + ', '.join(when(value) for value in item['resets']) + '.')
+        if detail:
+            lines.append('  Mapa: ' + pair_text(item['cells']) + '.')
+    if applied.get('restoration_pending') and status.get('mode_effective') != 'auto':
+        lines.append('Auxiliares: restauração pendente; OFF não certifica remoção ou downgrade. Repita `mode off` após requalificação.')
+    if applied.get('absence'):
+        lines.append('Auto auxiliar declarado; plugin ausente ou sem ciclo no intervalo retido.')
+    for group, fields in applied.get('groups_out', {}).items():
+        task = group.removeprefix('aux:')
+        lines.append(f"• {AUXILIARY_LABELS.get(task, task)} fora do Auto: {', '.join(fields)}; não sobrescrita nem restaurada.")
+    check = (status.get('compatibility') or {}).get('auxiliary') or applied.get('compatibility') or {}
+    if check.get('ok') is False:
+        lines.append('Qualificação auxiliar indisponível ou divergente; nenhuma nova escrita auxiliar autorizada.')
+        symbols = [r for r in check.get('reasons', []) if '.' in r]
+        if symbols:
+            lines.append('Símbolos: ' + ', '.join(symbols) + '.')
+    if detail:
+        coverage = decision.get('coverage') or {}
+        for task, base in coverage.get('inherited', {}).items():
+            lines.append(f"• {task} segue {base} por herança nativa; não é escrito pelo plugin.")
+        lines.append('Fora do alcance: auxiliares em `auto` ou fora do mapa, image_gen fixo, sessões de bypass e chamadas já iniciadas.')
+    return lines
+
+
 def render(command, payload):
     """Keep dependency diagnostics visible in text, including a dependency-only status payload."""
     unavailable = (payload.get('subagents') or {}).get('ok') is False and command != 'config'
     text = _render(command, payload) if not unavailable or 'settings' in payload else ''
+    if command != 'config':
+        text += '\n'.join(auxiliary_lines(payload, detail=command == 'explain'))
     # README.md, HQR-26: expose revisionless qualification without claiming the declared revision was measured.
     revision_note = (payload.get('compatibility') or {}).get('revision_note') if command != 'config' else None
     if revision_note:

@@ -93,7 +93,7 @@ class AutoCommandTests(unittest.TestCase):
             auto = self.call(m, 'mode auto')
             self.assertTrue(auto['ok'], auto)
             self.assertEqual(auto['mode_effective'], 'auto')
-            self.assertEqual(set(ctx.hooks), {'on_session_open', 'on_kanban_dispatch_tick', 'subagent_start', 'on_session_start', 'api_request_error'})
+            self.assertEqual(set(ctx.hooks), {'on_session_open', 'pre_llm_call', 'on_session_start', 'pre_tool_call', 'subagent_start', 'api_request_error'})
             status = self.call(m, 'apply')
             self.assertEqual(backend.document['model']['provider'], 'anthropic')
             self.assertEqual(status['applied']['age_s'], 0)

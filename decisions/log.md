@@ -1,5 +1,12 @@
 # Update Log
 
+## 2026-11-20
+
+- D-43 S1: distinguish eligible timeouts from incompatible reading formats and retain the primary route when its eligibility is unknown.
+- Preserve manual and legacy fallbacks; clearing or restoring a managed fallback requires a confirmed plugin write.
+- Add an offline installed exercise for Observe, route retention, and a change after confirmed exhaustion.
+- Earlier work included in this integration covers last-known readings, prompt and delegation hooks, auxiliary routing, per-profile isolation, and bounded lock waits.
+
 ## 2026-11-17
 
 - [Decisões de Guilherme sobre auxiliares](aux-definition.md#decisões-de-guilherme-2026-11-17) e [sobre a S4](s4-definition.md#decisões-de-guilherme-2026-11-17): auxiliares antes da S4 e governadas; S4 em todos os profiles, começando em Auto, com tag e GitHub Release; D-AUX-5 em aberto.

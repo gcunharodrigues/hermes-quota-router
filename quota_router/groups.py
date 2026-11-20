@@ -2,6 +2,7 @@
 # decisions/hqr-38-spec.md, D-28/D-29 ("Rede de segurança"): closed `fallback_providers` groups.
 """Closed Auto projections; never retain an unprojected document or a credential."""
 from copy import deepcopy
+import pickle
 
 from .settings import EFFORTS, PROVIDER_MODELS, PROVIDERS, safe_model, safe_name
 from .routes import defaults
@@ -10,7 +11,6 @@ FIELDS = ("provider", "model", "base_url", "api_mode", "reasoning_effort")
 CONVERSATION = ("model.provider", "model.default", "model.base_url", "model.api_mode", "agent.reasoning_effort")
 OPTIONS = "delegation.backends.model_map.options"
 FORBIDDEN = ("api_key", "api", "key_env", "api_key_env", "context_length")
-CONVERSATION_MODELS = ("gpt-6.1-sol", "claude-opus-5-5")
 # decisions/hqr-38-spec.md, D-29: one safety net group per enrolled group, named apart from any route option name.
 FALLBACK = "fallback_providers"
 FALLBACK_PREFIX = "fallback:"
@@ -47,19 +47,28 @@ def valid_chain(value):
     return True
 
 
-def get(document, path):
+_ABSENT = object()
+
+
+def _node(document, path):
     node = document
     for part in path.split('.'):
         if not isinstance(node, dict) or part not in node:
-            return {"present": False}
+            return _ABSENT
         node = node[part]
-    return {"present": True, "value": deepcopy(node)}
+    return node
+
+
+def get(document, path):
+    node = _node(document, path)
+    return {"present": False} if node is _ABSENT else {"present": True, "value": deepcopy(node)}
 
 
 def option(document, role):
-    options = get(document, OPTIONS).get("value")
+    # Desempenho 2026-11-19: only the matching entry is copied, not the whole options list (about 1100 calls per cycle).
+    options = _node(document, OPTIONS)
     matches = [o for o in options if isinstance(o, dict) and o.get("name") == role] if isinstance(options, list) else []
-    return matches[0] if len(matches) == 1 else None
+    return deepcopy(matches[0]) if len(matches) == 1 else None
 
 
 
@@ -76,22 +85,72 @@ def shared_boundary(document, role):
             return False
         indexes = [i for i, value in enumerate(options) if isinstance(value, dict) and value.get('name') == role]
         leaves = [tuple(OPTIONS.split('.')) + (i, field) for i in indexes for field in fields]
-    references = {}
-    def visit(value, path, ancestors):
-        container = isinstance(value, (dict, list))
-        anchored = getattr(getattr(value, 'anchor', None), 'value', None) is not None
-        if not container and not anchored:
-            return
-        identity = id(value)
-        references.setdefault(identity, []).append(path)
-        if identity in ancestors or not container:
-            return
-        children = value.items() if isinstance(value, dict) else enumerate(value)
-        for key, child in children:
-            visit(child, path + (key,), ancestors | {identity})
-    visit(document, (), set())
-    return any(len(paths) > 1 and any(leaf[:len(path)] == path for path in paths for leaf in leaves)
-               for paths in references.values())
+    return aliased(document, leaves)
+
+
+def _walk(value, ancestors, seen, prefixes=None, path=()):
+    """Visit containers and anchored values as the alias check always did: a cycle is recorded, not entered.
+
+    With `prefixes`, only children whose path is a prefix of some leaf are followed.
+    """
+    container = isinstance(value, (dict, list))
+    anchored = getattr(getattr(value, 'anchor', None), 'value', None) is not None
+    if not container and not anchored:
+        return
+    identity = id(value)
+    seen[identity] = seen.get(identity, 0) + 1
+    if identity in ancestors or not container:
+        return
+    ancestors.add(identity)
+    for key, child in value.items() if isinstance(value, dict) else enumerate(value):
+        if prefixes is None:
+            _walk(child, ancestors, seen)
+        elif path + (key,) in prefixes:
+            _walk(child, ancestors, seen, prefixes, path + (key,))
+    ancestors.discard(identity)
+
+
+# Desempenho 2026-11-18: one cycle checked about 460 groups, each walking the whole 148 KB document. Reference counts
+# do not depend on the group, so the last document's counts are kept while the very same object is checked again.
+# Revisão da simplificação, F3: the memo fails closed. It also keeps the document's pickle, which records every shared
+# reference, so a document changed in place after the count is counted again; a node the counts do not know (an equal
+# copy put in place) is counted again too, and a node still unknown then counts as aliased instead of raising.
+_COUNTS = (None, {}, None)
+
+
+def _fingerprint(document):
+    try:
+        return pickle.dumps(document, pickle.HIGHEST_PROTOCOL)
+    except Exception:
+        return None
+
+
+def _count(document):
+    global _COUNTS
+    counts = {}
+    _walk(document, set(), counts)
+    fingerprint = _fingerprint(document)
+    # A document pickle cannot record is counted again on every call, as before the memo.
+    _COUNTS = (document, counts, fingerprint) if fingerprint is not None else (None, {}, None)
+    return counts
+
+
+def aliased(document, leaves):
+    """True when a container or anchored value on some leaf's path is reached more than once (an alias or a cycle).
+
+    Same verdict as recording every path of every node and comparing each with each leaf.
+    """
+    prefixes = {leaf[:size] for leaf in leaves for size in range(len(leaf) + 1)}
+    if not prefixes:
+        return False
+    memo = _COUNTS
+    kept = memo[0] is document and _fingerprint(document) == memo[2]
+    counts = memo[1] if kept else _count(document)
+    on_path = {}
+    _walk(document, set(), on_path, prefixes)
+    if kept and not on_path.keys() <= counts.keys():
+        counts = _count(document)
+    return any(counts.get(identity, 2) > 1 for identity in on_path)
 
 
 
@@ -210,7 +269,7 @@ def target(role, selection, baseline=None):
             for key, value in zip(CONVERSATION if role == "conversation" else FIELDS, values)}
 
 
-def effective_fallback_errors(document, group, projection, allowed):
+def effective_fallback_errors(document, group, projection, allowed, *, prior=None):
     """SOL-05: qualify unowned native sources after projecting a target; return field names, never refused values.
 
     An absent route key inherits delegation.fallback_providers; [] suppresses inheritance.
@@ -222,7 +281,10 @@ def effective_fallback_errors(document, group, projection, allowed):
     cell = projection[FALLBACK]
     sources = []
     if owner(group) == "conversation":
-        sources.append(("fallback_model", document.get("fallback_model")))
+        # The root legacy fallback is always appended: deleting a proven managed chain cannot expose a new source.
+        clearing_managed = not allowed and not cell.get('value') and prior and prior[FALLBACK].get('value')
+        if not clearing_managed:
+            sources.append(("fallback_model", document.get("fallback_model")))
     elif not cell["present"] or cell.get("value") is None:
         sources.append(("delegation." + FALLBACK, get(document, "delegation." + FALLBACK).get("value")))
     eligible = {(entry["provider"], entry["model"]) for entry in allowed}

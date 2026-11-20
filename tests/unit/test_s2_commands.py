@@ -129,7 +129,7 @@ class CommandTests(unittest.TestCase):
         approved = json.loads(m.command("config approve-map base --json"))
         self.assertTrue(approved["ok"])
         roles = ctx.settings["roles"]
-        self.assertEqual(roles["conversation"]["openai-codex"], {"model": "gpt-6.1-sol", "effort": "xhigh"})
+        self.assertEqual(roles["conversation"]["openai-codex"], {"model": "gpt-6.2-sol", "effort": "xhigh"})
         decision = json.loads(m.command("explain --json"))["decisions"]["conversation"]
         self.assertEqual(decision["state"], "decided")
         self.assertEqual(decision["would_change"]["to"]["provider"], "anthropic")

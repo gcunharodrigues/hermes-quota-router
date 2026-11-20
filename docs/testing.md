@@ -17,6 +17,7 @@ python3 -m compileall -q __init__.py quota_router
 O ambiente limpo é parte obrigatória da invocação; os comandos acima mostram apenas os argumentos do runner.
 Desde a S2 o plugin usa o leitor nativo de cotas quando ele é importável; por isso `tests/unit/test_0_hermetic_environment.py` roda primeiro e encerra a suíte com código 2 se `agent.account_usage` estiver no caminho, antes que um teste leia cotas reais.
 A entrada suportada é `python3 scripts/run_tests.py [unit|integration|harness|<módulo de teste>]`: ela roda cada suíte ou teste escolhido em ambiente limpo e recusa rodar, com código 2, se o leitor nativo for importável nesse ambiente.
+Desde 2026-11-18 as suítes rodam um processo por módulo de teste, em paralelo (`-j N`, padrão um por CPU), cada um depois do guard da sua suíte e com HOME/TMPDIR próprios, no diretório de runtime privado do usuário quando existe; `-j 1` mantém a descoberta sequencial e verbosa anterior.
 `tests/integration/` tem o mesmo guard da unidade; rodar `python3 -m unittest` direto, fora do script, não é suportado.
 Os testes que precisam de arquivos usam `TemporaryDirectory` e limpeza no fim; o processo chamador limpa seu HOME/cache externos após preservar os logs necessários.
 O teste de integração exporta somente os caminhos versionados mais o manifesto para uma árvore temporária, confere hashes e carrega a entrada dessa cópia.

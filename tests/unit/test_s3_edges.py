@@ -28,24 +28,24 @@ class EdgeTests(unittest.TestCase):
     def test_loaded_models_dev_memory_overrides_curated_floor_without_io(self):
         module = self.models_dev()
         curated = types.ModuleType('hermes_cli.models_catalog_static')
-        curated._PROVIDER_MODELS = {'anthropic': ['claude-opus-5-5'], 'openai-codex': ['gpt-6.1-sol']}
+        curated._PROVIDER_MODELS = {'anthropic': ['claude-opus-5-5'], 'openai-codex': ['gpt-6.2-sol']}
         with mock.patch.dict(sys.modules, {'agent.models_dev': module, 'hermes_cli.models_catalog_static': curated}):
             catalogs = native_catalogs()
         self.assertEqual(catalogs, {'anthropic': ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5'],
-                                    'openai-codex': ['gpt-6.1-sol', 'gpt-6.1-terra', 'gpt-6-luna']})
+                                    'openai-codex': ['gpt-6.2-sol', 'gpt-6.1-terra', 'gpt-6-luna']})
         module.fetch_models_dev.assert_not_called()
 
     def test_models_dev_present_ids_route_routine_triage_extract_despite_curated_floor(self):
         helper = lifecycle_tests.AutoCommandTests()
         module = self.models_dev()
         curated = types.ModuleType('hermes_cli.models_catalog_static')
-        curated._PROVIDER_MODELS = {'anthropic': ['claude-opus-5-5'], 'openai-codex': ['gpt-6.1-sol']}
+        curated._PROVIDER_MODELS = {'anthropic': ['claude-opus-5-5'], 'openai-codex': ['gpt-6.2-sol']}
         with mock.patch.dict(sys.modules, {'agent.models_dev': module, 'hermes_cli.models_catalog_static': curated}), \
                 tempfile.TemporaryDirectory() as root:
             m, ctx, backend = helper.manager(root)
             self.addCleanup(m.close)
             options = backend.document['delegation']['backends']['model_map']['options']
-            options[:] = [dict(name=role, provider='openai-codex', model='gpt-6.1-sol', reasoning_effort='medium')
+            options[:] = [dict(name=role, provider='openai-codex', model='gpt-6.2-sol', reasoning_effort='medium')
                           for role in ('routine', 'triage', 'extract')]
             helper.call(m, 'config approve-map base')
             result = helper.call(m, 'mode auto')
@@ -115,7 +115,7 @@ class EdgeTests(unittest.TestCase):
     def test_unknown_models_dev_routes_with_visible_status_note(self):
         helper = lifecycle_tests.AutoCommandTests()
         for registry in ({}, {'anthropic': {'models': {}}, 'openai': {'models': {}}},
-                         {'openai': {'models': {'gpt-6.1-sol': {}}}}):
+                         {'openai': {'models': {'gpt-6.2-sol': {}}}}):
             with self.subTest(registry=registry), tempfile.TemporaryDirectory() as root:
                 module = self.models_dev()
                 module._models_dev_cache = registry

@@ -17,7 +17,6 @@ def _fraction(value):
 
 # decisions/hqr-38-spec.md, A23: a not-started window may report a reset slightly beyond now + duration.
 CLOCK_TOLERANCE_S = 120
-STATES = ("free", "pressured", "exhausted", "unknown")
 
 
 def _applies(window, model):
@@ -138,6 +137,9 @@ def eligibility(reading, settings, now, model=None, blocked=None):
 def _credits(provider, reading, settings):
     if not settings.get("credits." + provider, False):
         return False, "credits_disabled"
+    # D-43: a carried balance cannot authorize a paid route or fallback.
+    if reading.get("last_known"):
+        return False, "credits_not_verifiable"
     credits = reading.get("credits") or {}
     if not credits.get("visible"):
         return False, "credits_not_verifiable"

@@ -1,4 +1,4 @@
-# Implements decisions/hqr-20-amendment.md, section 13, AC-24 and D9/D12.
+# Implements decisions/hqr-20-amendment.md, section 13, AC-24 and D9/D12; decisions/aux-plan.md, D-AUXP-7/8.
 """Plugin settings: schema, defaults and validation (HQR-20 amendment, section 13).
 
 Values live in the plugin's native subtree and are read and written only through ctx.get_config and ctx.set_config.
@@ -14,6 +14,9 @@ DEFAULTS = {
     # decisions/hqr-20-amendment.md, D12: retained for saved-setting compatibility; it does not create a cron write group.
     "consumers.cron": True,
     "consumers.conversation": True,
+    # decisions/aux-plan.md, "Configuração consumers.auxiliary": opt-in, independently approved map.
+    "consumers.auxiliary": False,
+    "auxiliary_map": {},
     "conversation.policy": "principal_first",
     "principal": "openai-codex",
     "credits.openai-codex": True,
@@ -82,6 +85,27 @@ def _valid_roles(value):
     return True, value
 
 
+# decisions/aux-plan.md, D-AUXP-8: validate persisted pairs independently of today's proposal.
+def _valid_auxiliary_map(value):
+    if not isinstance(value, dict):
+        return False, "expected a mapping of task to provider pairs"
+    for task, pair in value.items():
+        if not safe_name(task) or not isinstance(pair, dict) or set(pair) != set(PROVIDERS):
+            return False, "each task needs both providers"
+        for provider, entry in pair.items():
+            # D-AUXP-7: absence is meaningful only for Claude approval; explicit null is never absence.
+            optional_effort = task == "approval" and provider == "anthropic"
+            keys = {"model", "effort"}
+            if not isinstance(entry, dict) or (set(entry) != keys and not (optional_effort and set(entry) == {"model"})):
+                return False, "each provider entry needs model and effort, except Claude approval"
+            if not safe_model(entry["model"]) or not PROVIDER_MODELS[provider].match(entry["model"]):
+                return False, "invalid model for provider"
+            efforts = ("low", "medium", "high", "xhigh", "max") if provider == "anthropic" else EFFORTS
+            if "effort" in entry and entry["effort"] not in efforts:
+                return False, "invalid effort"
+    return True, value
+
+
 def validate(key, value):
     """Return (True, normalized) or (False, reason) for one setting."""
     if key not in DEFAULTS:
@@ -89,6 +113,8 @@ def validate(key, value):
     default = DEFAULTS[key]
     if key == "roles":
         return _valid_roles(value)
+    if key == "auxiliary_map":
+        return _valid_auxiliary_map(value)
     if isinstance(default, bool):
         if isinstance(value, bool):
             return True, value

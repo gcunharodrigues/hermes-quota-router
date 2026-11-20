@@ -20,14 +20,33 @@ def lambda_shape(node):
     return shape(node)
 
 
-def loaded_lambda(value):
+# Desempenho 2026-11-18: lambdas of one parsed tree by first line, kept while the caller's parse cache keeps that tree.
+_LAMBDAS = {}
+
+
+def _lambdas_at(filename, tree, line):
+    hit = _LAMBDAS.get(filename)
+    if hit is None or hit[0] is not tree:
+        lines = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Lambda):
+                lines.setdefault(node.lineno, []).append(node)
+        hit = _LAMBDAS[filename] = (tree, lines)
+    return hit[1].get(line, [])
+
+
+def _tree(path, parse):
+    return parse(path)[1] if parse is not None else ast.parse(Path(path).read_text(encoding='utf-8'))
+
+
+def loaded_lambda(value, parse=None):
     if type(value) is not types.FunctionType or value.__code__.co_name != '<lambda>':
         raise ValueError('OAuth resolver source unavailable')
     # D18/R1/R3: an inline dictionary entry is not a standalone Python module.
     # Parse the complete source, tied to the active function's filename and first line; never execute it.
+    # `parse` is the caller's stat-keyed (source, tree) cache (compat._parsed); without it the file is parsed again.
     code = value.__code__
-    tree = ast.parse(Path(code.co_filename).read_text(encoding='utf-8'))
-    lambdas = [node for node in ast.walk(tree) if isinstance(node, ast.Lambda) and node.lineno == code.co_firstlineno]
+    lambdas = _lambdas_at(code.co_filename, _tree(code.co_filename, parse), code.co_firstlineno)
     if len(lambdas) != 1:
         raise ValueError('Ambiguous OAuth resolver source')
     return lambda_shape(lambdas[0])
@@ -55,7 +74,7 @@ def table_items(node):
     return result
 
 
-def source_routes(path, name, node):
+def source_routes(path, name, node, parse=None):
     items = table_items(node)
     routes = {}
     for provider in PROVIDERS:
@@ -69,8 +88,7 @@ def source_routes(path, name, node):
                 raise ValueError('Pool route source unavailable')
             mode, url = value.elts
             if isinstance(url, ast.Name) and url.id == 'DEFAULT_CODEX_BASE_URL':
-                constants = Path(path).with_name('auth_constants.py')
-                tree = ast.parse(constants.read_text(encoding='utf-8'))
+                tree = _tree(Path(path).with_name('auth_constants.py'), parse)
                 url = next(n.value for n in tree.body if isinstance(n, ast.Assign)
                            and any(isinstance(t, ast.Name) and t.id == url.id for t in n.targets))
             routes[provider] = {'api_mode': ast.literal_eval(mode), 'base_url': ast.literal_eval(url)}
@@ -91,7 +109,7 @@ def source_routes(path, name, node):
     return routes
 
 
-def loaded_routes(name, value):
+def loaded_routes(name, value, parse=None):
     if type(value) is not dict:
         raise ValueError('Loaded dispatch table unavailable')
     routes = {}
@@ -111,21 +129,25 @@ def loaded_routes(name, value):
             if any(type(fields.get(key)) is not str for key in ('api_mode', 'default_base_url')):
                 raise ValueError('Loaded OAuth fields unavailable')
             routes[provider] = {'api_mode': fields['api_mode'], 'default_base_url': fields['default_base_url'],
-                                'resolve': loaded_lambda(fields['resolve'])}
+                                'resolve': loaded_lambda(fields['resolve'], parse)}
     return routes
 
 
-def binding(path, name, loaded=None):
-    source = Path(path).read_text(encoding='utf-8')
-    tree = ast.parse(source)
+def binding(path, name, loaded=None, parsed=None, parse=None):
+    # Revisão F1–F5, R2: `parsed` is the caller's cached (source, tree) of the same file, unchanged since its stat;
+    # `parse` reads any other file through the same cache.
+    source, tree = parsed if parsed is not None else (None, None)
+    if source is None:
+        source = Path(path).read_text(encoding='utf-8')
+        tree = ast.parse(source)
     matches = [node for node in tree.body if isinstance(node, (ast.Assign, ast.AnnAssign))
                and any(isinstance(target, ast.Name) and target.id == name
                        for target in (node.targets if isinstance(node, ast.Assign) else [node.target]))]
     if len(matches) != 1:
         raise ValueError('Ambiguous dispatch assignment')
     node = matches[0]
-    routes = source_routes(path, name, node.value)
-    if loaded is not None and loaded_routes(name, vars(loaded)[name]) != routes:
+    routes = source_routes(path, name, node.value, parse)
+    if loaded is not None and loaded_routes(name, vars(loaded)[name], parse) != routes:
         raise ValueError('Loaded dispatch route differs from source')
     block = ''.join(source.splitlines(keepends=True)[node.lineno - 1:node.end_lineno])
     return {'source_sha256': hashlib.sha256(block.encode('utf-8')).hexdigest(), 'routes': routes}

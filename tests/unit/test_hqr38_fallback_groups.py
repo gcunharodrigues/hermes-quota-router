@@ -95,6 +95,8 @@ class EngineTests(unittest.TestCase):
             backend.document["fallback_providers"] = [dict(OPUS, model="claude-sonnet-5-5")]
             baseline = backend.read()
             engine = Engine(root, backend, qualified)
+            engine.cycle(self.selections(), now=5)
+            self.assertEqual(backend.read()["fallback_providers"], [OPUS])
             engine.cycle(self.selections(chain=()), now=10)
             self.assertEqual(backend.read()["fallback_providers"], [])
             self.assertNotIn("fallback_providers", backend.read()["delegation"]["backends"]["model_map"]["options"][0])
